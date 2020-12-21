@@ -28,8 +28,8 @@ class WES:
         c1=(1/(T*math.log(1e9/e))-1/(self.T0*math.log(1e9/self.e0)))
         val=self.St0*math.exp(8e-4*self.T0*(self.St0/self.E)**(-1.5)*c1)
         return val
-class Impact:
-    def BRL(self,M,V,D,Ks=1.0):
+class BRL:
+    def eval(self,M,V,D,Ks=1.0):
         """
         目的:BRL式による貫通限界板厚の評価
         入力:
