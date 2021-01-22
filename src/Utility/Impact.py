@@ -55,14 +55,14 @@ class JohnsonCook:
     Johnson-Cook則の計算
     登録材料 'DH36Steel''OFHC COPPER''ARMCO IRON''AISI-1045Steel''CARTRIDGE BRASS''NICKEL 200'
         'CARPENTER ELECTRICAL IRON''2024-T351 ALUMINUM''TUNGSTEN ALLOY''1006 STEEL''7039 ALUMINUM'
-        '4340 STEEL''S-7 STEEL''DU-.75Ti'
+        '4340 STEEL''S-7 STEEL''DU-.75Ti''SM400C_1''SM400C_2'
     利用法:
         jc=JohnsonCook()
         jc.Material('DH36Steel')
-        ep=0.01
+        e_d0=0.01
         ep_d=0.2
         T=273+15
-        s=jc.JC(ep,ep_d,T)
+        s=jc.JC(ep,ep_d,T,e_d0=e_d0)
         print(s)
     """
     def __init__(self):
@@ -81,9 +81,25 @@ class JohnsonCook:
             ref="M.Murugesan,D.W.Jung,'Johnson Cook Material and Failure Model Parameters Estimation of AISI-1045 Medium Carbon Steel for Metal Forming Applications',Materials 2019, 12, 609; doi:10.3390/ma12040609"
         elif self.ref==2:
             ref="HPI SIL3"
+        elif self.ref==3:
+            ref="HPI SIL2"
         return ref
     def Material(self,mat):
         assert mat!=''
+        if mat=='SM400C_1':
+            self.A=3.101e2
+            self.B=5.694e2
+            self.n=4.931e-1
+            self.C=4.8573e-4
+            self.e_d0=1e-3
+            self.ref=3
+        if mat=='SM400C_2':
+            self.A=3.101e2
+            self.B=5.289e2
+            self.n=4.767e-1
+            self.C=3.575e-4
+            self.e_d0=1e-1
+            self.ref=3
         if mat=='DH36Steel':
             self.A=1020
             self.B=1530
@@ -224,9 +240,15 @@ class JohnsonCook:
             self.Tm=1623
             self.T0=1223
             self.ref=1
-    def JC(self,e,e_d,T,e_d0=1):
-        th=(T-self.T0)/(self.Tm-self.T0)
+    def JC(self,e,e_d,T=0,e_d0=1):
+        if T==0:
+            th=0.0
+        else:
+            th=(T-self.T0)/(self.Tm-self.T0)
         c1=(self.A+self.B*e**self.n)
         c2=(1+self.C*math.log(e_d/e_d0))
-        c3=(1-th**self.m)
+        if T==0:
+            c3=1.0
+        else:
+            c3=(1-th**self.m)
         return c1*c2*c3
