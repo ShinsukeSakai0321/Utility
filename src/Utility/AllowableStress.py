@@ -5,7 +5,7 @@ from scipy.stats import nct # 非心t分布
 class PAStress:
     """
     目的:
-        許容応力の確率論的決定支援
+        許容応力の確率論的決定支援(正規分布)
     例題:
         pas=PAStress()
         data=[408.4, 374.0, 395.9, 405.8,412.3]
@@ -148,3 +148,45 @@ class PAStress:
         elif spec=='C2':
             s_a=self.Basis2(P,gamma,sigm)
         return s_a
+class PAStressL:
+    """    
+    目的:
+        許容応力の確率論的決定支援(対数正規分布)
+    """
+    def __init__(self):
+        self.data=[]
+        self.pas=PAStress()
+    def SetData(self,data):
+        """
+        目的:強度サンプルデータの読み込み
+        """
+        self.data=np.log(data)
+        self.pas.SetData(self.data)
+    def Abasis(self):
+        """
+        目的:A許容値の計算(μL，σLともに未知)
+        """
+        x=self.pas.Abasis()
+        return np.exp(x)
+    def Bbasis(self):
+        """
+        目的:B許容値の計算(μL，σLともに未知)
+        """
+        x=self.pas.Bbasis()
+        return np.exp(x)
+    def Abasis2(self,sigm=2):
+        """
+        目的:A許容値の計算(μLのみ未知)
+        引数:
+            sigm: 母集団の対数データ標準偏差
+        """
+        x=self.pas.Abasis2(sigm)
+        return np.exp(x)
+    def Bbasis2(self,sigm=2):
+        """
+        目的:B許容値の計算(μLのみ未知)
+        引数:
+            sigm: 母集団の対数データ標準偏差
+        """
+        x=self.pas.Bbasis2(sigm)
+        return np.exp(x)
