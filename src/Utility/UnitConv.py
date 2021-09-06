@@ -44,7 +44,15 @@ class UnitBase:
         """
         return self.Calc(self.Coef(s1),self.Coef(s2),v)
     def ShowDict(self):
+        """項目名,数値　の辞書形式を返す
+        """
         return self.unit_dict
+    def ShowKeys(self):
+        """単位項目名のリストを返す
+        """
+        tt=self.ShowDict()
+        aa=tt.keys()
+        return list(aa)        
 class UnitBaseT(UnitBase):
     def __init__(self,unit_list):
         super().__init__(unit_list)
@@ -302,6 +310,69 @@ class Sif(UnitBase):
             ('kgf/mm^3/2',forc.Coef('kgf')/len.Coef('mm')/np.sqrt(len.Coef('mm'))),
             ('ksi/in^1/2',forc.Coef('klb')/len.Coef('in')/np.sqrt(len.Coef('in')))
         })
-        
+#### added at 2021.9.6        
+class Viscocity(UnitBase):
+    """
+    単位:粘度
+    項目:'Pa_s''kgf_s/m^2''lbf_s/ft^2''lbf_s/ft^2''lbm/(ft_s)''P''cP'
+    """
+    def __init__(self):
+        super().__init__({
+            ('Pa_s',1.0),
+            ('kgf_s/m^2',9.80665),
+            ('lbf_s/ft^2',4.788026),
+            ('lbm/(ft_s)',1.488164),
+            ('P',0.1),
+            ('cP',0.001)
+        })
+class HeatConductivity(UnitBase):
+    """
+    単位:熱伝導率
+    項目:'W/(m_K)''kcal/(m_h_celsius)''cal/(cm_s_celsius)''Btu/(ft_h_fahrenheit)'
+    """
+    def __init__(self):
+        super().__init__({
+            ('W/(m_K)',1.0),
+            ('kcal/(m_h_celsius)',9.80665),
+            ('cal/(cm_s_celsius)',4.788026),
+            ('Btu/(ft_h_fahrenheit)',1.488164)
+        })
+class HeatFlux(UnitBase):
+    """
+    単位:熱流束
+    項目:'W/m^2''kcal/(m^2_h)''Btu/(ft^2_h)'
+    """
+    def __init__(self):
+        super().__init__({
+            ('W/m^2',1.0),
+            ('kcal/(m^2_h)',9.80665),
+            ('Btu/(ft^2_h)',4.788026)
+        })
+class HeatTransferRate(UnitBase):
+    """
+    単位:熱伝達率
+    項目:'W/(m^2_K)''kcal/(m^2_h_celsius)''Btu/(ft^2_h_fahrenheit)'
+    """
+    def __init__(self):
+        super().__init__({
+            ('W/(m^2_K)',1.0),
+            ('kcal/(m^2_h_celsius)',1.163),
+            ('Btu/(ft^2_h_fahrenheit)',5.678264)
+        })
+class UnitJ(UnitBase):
+    """
+    単位:J値
+    項目:'W/(m^2_K)''kcal/(m^2_h_celsius)''Btu/(ft^2_h_fahrenheit)'
 
-
+    """
+    def __init__(self):
+        forc=self.Force()
+        len=self.Length()
+        super().__init__({
+            ('N/m',1.0),
+            ('MN/m',1.163),
+            ('kgf/m',5.678264),
+            ('kgf/mm',forc.Coef('kgf')/len.Coef('mm')),
+            ('lb/in',forc.Coef('lb')/len.Coef('in')),
+            ('KJ/m^2',1000.0)
+        })
