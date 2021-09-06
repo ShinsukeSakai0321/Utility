@@ -366,8 +366,8 @@ class UnitJ(UnitBase):
 
     """
     def __init__(self):
-        forc=self.Force()
-        len=self.Length()
+        forc=Force()
+        len=Length()
         super().__init__({
             ('N/m',1.0),
             ('MN/m',1.163),
