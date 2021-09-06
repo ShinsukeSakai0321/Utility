@@ -169,6 +169,7 @@ class Volume(UnitBase):
         super().__init__([
             ('m^3',1.0),
             ('cm^3',len.Coef('cm')**3),
+            ('mm^3',len.Coef('mm')**3),
             ('in^3',len.Coef('in')**3),
             ('feet^3',len.Coef('feet')**3),
             ('liter',1000*len.Coef('cm')**3),
