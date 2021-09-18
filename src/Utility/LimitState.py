@@ -278,7 +278,7 @@ def reliability(g='r-s',var=['r','s'],dist=['normal','normal'],muX=[200,100],sig
     aa=GeneralTreat(g,var,dist,muX,sigmmaX)
     aa.calc()
     return aa
-class Gmanage(ls.LSFM):
+class Gmanage(LSFM):
     """ユーザ定義のGをLSFMによる解析に接続する
     　　使い方
       　brl=Gmanage(n,muX,sigmmaX,dist,G)
