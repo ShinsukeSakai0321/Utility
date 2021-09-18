@@ -278,6 +278,20 @@ def reliability(g='r-s',var=['r','s'],dist=['normal','normal'],muX=[200,100],sig
     aa=GeneralTreat(g,var,dist,muX,sigmmaX)
     aa.calc()
     return aa
+class Gmanage(ls.LSFM):
+    """ユーザ定義のGをLSFMによる解析に接続する
+    　　使い方
+      　brl=Gmanage(n,muX,sigmmaX,dist,G)
+        brl.RF()
+        print('beta=',brl.GetBeta())
+        print('alpha=',brl.GetAlpha())
+        Gの部分にユーザ定義のクラス名を記述
+    """
+    def __init__(self,n,Mu,sigmmaX,dist,g):
+        self.n=n
+        gg=g(self.n)
+        super().DefineG(gg)
+        super().__init__(n,Mu,sigmmaX,dist)
 from math import exp,log,sqrt
 class GMetalLoss(Lbase):
     """
