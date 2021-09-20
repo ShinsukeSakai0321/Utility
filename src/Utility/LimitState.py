@@ -292,6 +292,38 @@ class Gmanage(LSFM):
         gg=g(self.n)
         super().DefineG(gg)
         super().__init__(n,Mu,sigmmaX,dist)
+class RelBase:
+    """汎用信頼性評価のための基底クラス
+    """
+    def SetData(self,data):
+        key=data.keys()
+        self.muX=[]
+        self.cov=[]
+        self.dist=[]
+        for aa in key:
+            self.muX.append(data[aa]['mean'])
+            self.cov.append(data[aa]['cov'])
+            self.dist.append(data[aa]['dist'])
+        self.sigmmaX = list(np.array(self.cov)*np.array(self.muX))
+    def Reliability(self,data):
+        n=len(data)
+        self.SetData(data)
+        self.lsfm=ls.Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
+        self.lsfm.RF()
+    def Geval(self,data):
+        self.SetData(data)
+        lsfm=ls.Gmanage(len(data),self.muX,self.sigmmaX,self.dist,self.G)
+        return lsfm.GetG()
+    def GetBeta(self):
+        return self.lsfm.GetBeta()
+    def GetAlpha(self):
+        return self.lsfm.GetAlpha()
+    def GetPOF(self):
+        return self.lsfm.GetPOF()
+    def GetVar(self):
+        return self.variable
+    def GetTitle(self):
+        return self.title
 from math import exp,log,sqrt
 class GMetalLoss(Lbase):
     """
