@@ -308,11 +308,11 @@ class RelBase:
     def Reliability(self,data):
         n=len(data)
         self.SetData(data)
-        self.lsfm=ls.Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
+        self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
         self.lsfm.RF()
     def Geval(self,data):
         self.SetData(data)
-        lsfm=ls.Gmanage(len(data),self.muX,self.sigmmaX,self.dist,self.G)
+        lsfm=Gmanage(len(data),self.muX,self.sigmmaX,self.dist,self.G)
         return lsfm.GetG()
     def GetBeta(self):
         return self.lsfm.GetBeta()
