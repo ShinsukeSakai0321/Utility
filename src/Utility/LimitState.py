@@ -296,7 +296,7 @@ class RelBase:
     """汎用信頼性評価のための基底クラス
     """
     def SetData(self,data):
-        key=data.keys()
+        key=self.variable
         self.muX=[]
         self.cov=[]
         self.dist=[]
