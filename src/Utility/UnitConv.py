@@ -377,3 +377,11 @@ class UnitJ(UnitBase):
             ('lb/in',forc.Coef('lb')/len.Coef('in')),
             ('KJ/m^2',1000.0)
         })
+class Rcheck:
+    """適用範囲のチェック
+    """
+    def check(self,cond,val,min_r,max_r):
+        if val >= min_r and val<=max_r:
+            print('**Validation of [',cond,'] satisfied**')
+            return
+        print('**Validation of [',cond,'] not satisfied**:',',Value=',val)

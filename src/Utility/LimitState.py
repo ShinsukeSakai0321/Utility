@@ -306,13 +306,13 @@ class RelBase:
             self.dist.append(data[aa]['dist'])
         self.sigmmaX = list(np.array(self.cov)*np.array(self.muX))
     def Reliability(self,data):
-        n=len(data)
+        n=len(self.variable)
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
         self.lsfm.RF()
     def Geval(self,data):
         self.SetData(data)
-        lsfm=Gmanage(len(data),self.muX,self.sigmmaX,self.dist,self.G)
+        lsfm=Gmanage(len(self.variable),self.muX,self.sigmmaX,self.dist,self.G)
         return lsfm.GetG()
     def GetBeta(self):
         return self.lsfm.GetBeta()
