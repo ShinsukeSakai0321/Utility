@@ -91,7 +91,7 @@ class PAStress:
         gamma=0.05
         s_a=self.Basis1(P,gamma)
         return s_a
-    def Abasis2(self,sigm=20):
+    def Abasis2(self):
         """
         目的:A許容値の計算(平均値のみ未知)
         引数:
@@ -99,9 +99,10 @@ class PAStress:
         """
         P=0.01
         gamma=0.05
+        sigm=self.sigm
         s_a=self.Basis2(P,gamma,sigm)
         return s_a
-    def Bbasis2(self,sigm=20):
+    def Bbasis2(self):
         """
         目的:B許容値の計算(平均値のみ未知)
         引数:
@@ -109,6 +110,7 @@ class PAStress:
         """
         P=0.1
         gamma=0.05
+        sigm=self.sigm
         s_a=self.Basis2(P,gamma,sigm)
         return s_a
     def AS(self,spec='A1',sigm=20,P=0.1,gamma=0.05):
