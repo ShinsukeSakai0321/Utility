@@ -192,6 +192,7 @@ class PAStressL:
         """
         x=self.pas.Bbasis2(sigm)
         return np.exp(x)
+from scipy.stats import chi2
 class PAStressW:
     """    
     目的:
