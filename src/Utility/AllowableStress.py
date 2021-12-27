@@ -192,3 +192,46 @@ class PAStressL:
         """
         x=self.pas.Bbasis2(sigm)
         return np.exp(x)
+class PAStressW:
+    """    
+    目的:
+        許容応力の確率論的決定支援(形状母数既知の二母数ワイブル分布)
+    """
+    def __init__(self):
+        self.data=[]
+    def SetData(self,data,alpha):
+        """
+        目的:強度サンプルデータの読み込み
+        data  データ配列
+        alpha 既知の形状母数
+        """
+        self.alpha=alpha
+        dd=np.array(data)
+        self.data=dd
+        self.beta=np.mean(dd**alpha)**(1./alpha)
+        return self.beta
+    def kAr(self,P,gam,n):
+        """
+        目的:k**alphaの計算
+        　　　kは(kAr)**(1/self.alpha)により求まる
+        """
+        a=chi2.ppf(q=1-gam,df=2*n)
+        return -a/(2*n*np.log(1-P))
+    def Abasis(self):
+        """
+        目的:A許容値の計算
+        """
+        P=0.01
+        gamma=0.05
+        n=len(self.data)
+        k=self.kAr(P,gamma,n)**(1./self.alpha)
+        return self.beta/k
+    def Bbasis(self):
+        """
+        目的:B許容値の計算
+        """
+        P=0.1
+        gamma=0.05
+        n=len(self.data)
+        k=self.kAr(P,gamma,n)**(1./self.alpha)
+        return self.beta/k
