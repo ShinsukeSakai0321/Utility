@@ -300,11 +300,23 @@ class RelBase:
         self.muX=[]
         self.cov=[]
         self.dist=[]
+        """
         for aa in key:
             self.muX.append(data[aa]['mean'])
             self.cov.append(data[aa]['cov'])
             self.dist.append(data[aa]['dist'])
         self.sigmmaX = list(np.array(self.cov)*np.array(self.muX))
+        """
+        self.sigmmaX=[]
+        for aa in key:
+            self.dist.append(data[aa]['dist'])
+            muX=data[aa]['mean']
+            self.muX.append(muX)
+            if 'cov' in data[aa]:
+                sX=muX*data[aa]['cov']
+            else:
+                sX=data[aa]['sd']
+            self.sigmmaX.append(sX)       
     def Reliability(self,data):
         n=len(self.variable)
         self.SetData(data)
