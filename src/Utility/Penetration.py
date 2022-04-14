@@ -5,6 +5,14 @@ from sympy import *
 #             BRL              #
 ################################
 class BRL(ls.RelBase,uc.Rcheck):
+    """
+    Ballistic Research Laboratories (BRL) model (1968)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   instantaneous velocity of impactor
+    """
     def __init__(self):
         self.variable=['b','d','m','v']
         self.title='BRL Formula'
@@ -60,6 +68,14 @@ class BRL(ls.RelBase,uc.Rcheck):
 #             DeMarre          #
 ################################
 class DeMarre(ls.RelBase,uc.Rcheck):
+    """
+    De Marre formula (Herrmann and Jones,1961)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   instantaneous velocity of impactor
+    """
     def __init__(self):
         self.variable=['b','d','m','v']
         self.title='De Marre Formula'
@@ -107,6 +123,15 @@ class DeMarre(ls.RelBase,uc.Rcheck):
 import numpy as np
 
 class THOR(ls.RelBase,uc.Rcheck):
+    """
+    THOR equation (Crull and Swisdak, 2005)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   instantaneous velocity of impactor
+    th  angle between a normal vector to a shield surface and the direction of impactor
+    """
     C1=0
     a1=0
     b1=0
@@ -175,6 +200,14 @@ class THOR(ls.RelBase,uc.Rcheck):
 #             Ohte             #
 ################################
 class Ohte(ls.RelBase,uc.Rcheck):
+    """
+    Ohte et al. Formula (Ohte et al., 1982)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   instantaneous velocity of impactor
+    """
     def __init__(self):
         self.variable=['b','d','m','v']
         self.title='Ohte et al. Formula'
@@ -226,6 +259,17 @@ class Ohte(ls.RelBase,uc.Rcheck):
 #             SRI              #
 ################################
 class SRI(ls.RelBase,uc.Rcheck):
+    """
+    Stanford Research Institute (SRI) correlation (1963)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   instantaneous velocity of impactor
+    Lsh unsupported shield panel span
+    Su  ultimate tensile strength of shield material
+    Limp    length of impactor
+    """
     def __init__(self):
         self.variable=['b','d','m','v','Lsh','Su']
         self.title='Ohte et al. Formula'
@@ -249,7 +293,7 @@ class SRI(ls.RelBase,uc.Rcheck):
             self.n=n
             super().__init__(self.n)
             b,d,m,v,Su,Lsh=symbols('b d m v Su Lsh')
-            a6=0.44
+            a6=0.4
             g=a6*b*sqrt(Su*d/m*(42.7+Lsh/b))-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
