@@ -14,7 +14,7 @@ class BRL(ls.RelBase,uc.Rcheck):
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
-    v   instantaneous velocity of impactor
+    v   velocity of impactor
     """
     def __init__(self):
         self.variable=['b','d','m','v']
@@ -77,7 +77,7 @@ class DeMarre(ls.RelBase,uc.Rcheck):
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
-    v   instantaneous velocity of impactor
+    v   velocity of impactor
     """
     def __init__(self):
         self.variable=['b','d','m','v']
@@ -132,7 +132,7 @@ class THOR(ls.RelBase,uc.Rcheck):
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
-    v   instantaneous velocity of impactor
+    v   velocity of impactor
     th  angle between a normal vector to a shield surface and the direction of impactor
     """
     C1=0
@@ -209,7 +209,7 @@ class Ohte(ls.RelBase,uc.Rcheck):
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
-    v   instantaneous velocity of impactor
+    v   velocity of impactor
     """
     def __init__(self):
         self.variable=['b','d','m','v']
@@ -268,7 +268,7 @@ class SRI(ls.RelBase,uc.Rcheck):
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
-    v   instantaneous velocity of impactor
+    v   velocity of impactor
     Lsh unsupported shield panel span
     Su  ultimate tensile strength of shield material
     Limp    length of impactor
@@ -330,4 +330,81 @@ class SRI(ls.RelBase,uc.Rcheck):
             dGdX[3] =eval(self.d3)
             dGdX[4] =eval(self.d4)
             dGdX[5] =eval(self.d5)
+            super().SetdGdX(dGdX)
+################################
+#             SwRI              #
+################################
+class SwRI(ls.RelBase,uc.Rcheck):
+    """
+    Southwest Research Institute (SwRI) model (Baker et al., 1980)
+    ---
+    b   thickness of a shield
+    m   initial mass of the impactor
+    v   velocity of impactor
+    th  angle between a normal vector to a shield surface and the direction of impactor
+    fragment  :'Standard' or 'Alternative'
+    """
+    S=0
+    b1=0
+    b2=0
+    b3=0
+    def __init__(self):
+        self.variable=['b','m','v','th']
+        self.title='Southwest Research Institute (SwRI) model'
+    def Validation(self,data):
+        global S,b1,b2,b3
+        tab={"0":{"b1":1414,"b2":0.295,"b3":0.910},
+        "1":{"b1":1936,"b2":0.096,"b3":1.310},
+        "2":{"b1":2039,"b2":0.064,"b3":0.430}}
+        m=data['m']['mean']
+        b=data['b']['mean']
+        v=data['v']['mean']
+        th=data['th']['mean']
+        if data['fragment'] == 'Standard':
+            k=0.186
+        else:
+            k=0.34
+        S=1.33*(m/k)**(2/3)
+        z=b/np.sqrt(S)
+        if z>0 and z<=0.46:
+            a="0"
+        if z>0.46 and z<=1.06:
+            a="1"
+        if z>1.06:
+            a="2"
+        b1=tab[a]["b1"]
+        b2=tab[a]["b2"]
+        b3=tab[a]["b3"]
+        print('Validation process is not defined.')
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global S,b1,b2,b3
+            self.n=n
+            super().__init__(self.n)
+            b,m,v,th=symbols('b m v th')
+            g=0.205*b1/np.sqrt(m)*S**b2*(39.37*b/cos(th))**b3-v
+            self.gg=str(g)
+            self.d0=str(diff(g,b))
+            self.d1=str(diff(g,m))
+            self.d2=str(diff(g,v))
+            self.d4=str(diff(g,th))
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            m=X[1]
+            v=X[2]
+            th=X[3]
+            g=eval(self.gg)
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            m=X[1]
+            v=X[2]
+            th=X[3]
+            dGdX[0]=eval(self.d0)
+            dGdX[1] =eval(self.d1)
+            dGdX[2] =eval(self.d2)
+            dGdX[3] =eval(self.d3)
             super().SetdGdX(dGdX)
