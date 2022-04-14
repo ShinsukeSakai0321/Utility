@@ -105,12 +105,12 @@ class DeMarre(ls.RelBase,uc.Rcheck):
 #             THOR             #
 ################################
 import numpy as np
-C1=0
-a1=0
-b1=0
-g1=0
-class THOR(ls.RelBase,uc.Rcheck):
 
+class THOR(ls.RelBase,uc.Rcheck):
+    C1=0
+    a1=0
+    b1=0
+    g1=0
     def __init__(self):
         self.variable=['b','d','m','v','th']
         self.title='THOR Equations'
