@@ -1,6 +1,9 @@
 from Utility import LimitState as ls
 from Utility import UnitConv as uc
 from sympy import *
+"""
+貫通評価モジュール
+"""
 ################################
 #             BRL              #
 ################################
