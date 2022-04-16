@@ -1,13 +1,65 @@
 from Utility import LimitState as ls
-from Utility import UnitConv as uc
 from sympy import *
+class penMed(ls.RelBase):
+    """
+    目的:貫通評価クラスが継承する直前のクラス
+    """
+    def PoFcontour(self,lmsf,data,x,y,xlabel,ylabel):
+        """
+        目的:JSONデータdata内の二つのパラメータxlabel,ylabelに関するPOF等高線データ作成
+            lmsf:   貫通評価クラスのインスタンス
+            data:   貫通評価計算のための入力データ(JSON形式)
+            x:      x = np.arange(0.006, 0.02, 0.0002)などで発生するデータ列
+            y:      y = np.arange(0.006, 0.02, 0.0002)などで発生するデータ列
+            xlabel: data内の対象ラベル
+            ylabel: data内の対象ラベル
+        戻り値: X,Y,Z
+            plt.pcolormesh(X, Y, Z, cmap='hsv')などにより等高線描画する
+        """
+        X, Y = np.meshgrid(x, y)
+        ZZ=[]
+        for iy in range(len(y)):    
+            yy=Y[:,0][iy]
+            data[ylabel]['mean']=yy
+            za=[]
+            for ix in range(len(x)):
+                xx=X[0][ix]
+                data[xlabel]['mean']=xx
+                lmsf.Reliability(data)
+                pof=lmsf.GetPOF()
+                za.append(pof)
+            ZZ.append(za)
+        return X,Y,ZZ
+    def SaveRange(self,aa):
+        """
+        目的:適用範囲データの保存
+        """
+        self.Range=aa
+    def ShowRange(self):
+        """
+        目的:適用範囲データの表示
+        """
+        return self.Range
+    def check(self,cond,val):
+        """
+        目的:適用範囲内であるかどうかのチェック
+        　　使い方:  継承したクラスから
+          　　　super().check('b/d',b/d)
+             など
+        """
+        min_r=self.Range[cond][0]
+        max_r=self.Range[cond][1]
+        if val >= min_r and val<=max_r:
+            print('**Validation of [',cond,'] satisfied**')
+            return
+        print('**Validation of [',cond,'] not satisfied**:',',Value=',val)
 """
 貫通評価モジュール
 """
 ################################
 #             BRL              #
 ################################
-class BRL(ls.RelBase,uc.Rcheck):
+class BRL(penMed):
     """
     Ballistic Research Laboratories (BRL) model (1968)
     ---
@@ -19,6 +71,14 @@ class BRL(ls.RelBase,uc.Rcheck):
     def __init__(self):
         self.variable=['b','d','m','v']
         self.title='BRL Formula'
+        val_range={
+            'v_bl':[57,270],
+            'Limp/d':[1.25,8],
+            'b/d':[0.1,1.0],
+            'Lsh/d':[8,35],
+            'Su':[315,500]
+        }
+        super().SaveRange(val_range)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -28,11 +88,11 @@ class BRL(ls.RelBase,uc.Rcheck):
         Su=data['Su']['mean']
         a7=5.37
         v_bl=a7*1e4*(b*d)**0.75/m**0.5
-        super().check('v_bl',v_bl,57,270)
-        super().check('Limp/d',Limp/d,1.25,8)
-        super().check('b/d',b/d,0.1,1.0)
-        super().check('Lsh/d',Lsh/d,8,35)
-        super().check('Su',Su,315,500)
+        super().check('v_bl',v_bl)
+        super().check('Limp/d',Limp/d)
+        super().check('b/d',b/d)
+        super().check('Lsh/d',Lsh/d)
+        super().check('Su',Su)
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -70,7 +130,7 @@ class BRL(ls.RelBase,uc.Rcheck):
 ################################
 #             DeMarre          #
 ################################
-class DeMarre(ls.RelBase,uc.Rcheck):
+class DeMarre(penMed):
     """
     De Marre formula (Herrmann and Jones,1961)
     ---
@@ -82,13 +142,18 @@ class DeMarre(ls.RelBase,uc.Rcheck):
     def __init__(self):
         self.variable=['b','d','m','v']
         self.title='De Marre Formula'
+        val_range={
+            'v_bl':[200,900],
+            'm':[0.1,50]
+        }
+        super().SaveRange(val_range)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
         m=data['m']['mean']
         v_bl=0.4311e5*d**0.75*b**0.7/m**0.5
-        super().check('v_bl',v_bl,200,900)
-        super().check('m',m,0.1,50)
+        super().check('v_bl',v_bl)
+        super().check('m',m)
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -125,7 +190,7 @@ class DeMarre(ls.RelBase,uc.Rcheck):
 ################################
 import numpy as np
 
-class THOR(ls.RelBase,uc.Rcheck):
+class THOR(penMed):
     """
     THOR equation (Crull and Swisdak, 2005)
     ---
@@ -142,6 +207,7 @@ class THOR(ls.RelBase,uc.Rcheck):
     def __init__(self):
         self.variable=['b','d','m','v','th']
         self.title='THOR Equations'
+        super().SaveRange('Validation process is not defined.')
     def setMaterial(self,mat):
         """
         目的:材料の設定
@@ -202,7 +268,7 @@ class THOR(ls.RelBase,uc.Rcheck):
 ################################
 #             Ohte             #
 ################################
-class Ohte(ls.RelBase,uc.Rcheck):
+class Ohte(penMed):
     """
     Ohte et al. Formula (Ohte et al., 1982)
     ---
@@ -214,6 +280,15 @@ class Ohte(ls.RelBase,uc.Rcheck):
     def __init__(self):
         self.variable=['b','d','m','v']
         self.title='Ohte et al. Formula'
+        val_range={
+            'v_bl':[25,180],
+            'm':[3,50],
+            'Su':[490,637],
+            'b':[7,38],
+            'Lsh/b':[39,1e4],
+            'd':[39,1e4]
+        }
+        super().SaveRange(val_range)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -221,12 +296,12 @@ class Ohte(ls.RelBase,uc.Rcheck):
         Su=data['Su']['mean']
         Lsh=data['Lsh']['mean']
         v_bl=7.67e4*(b*d)**0.75/m**0.5
-        super().check('v_bl',v_bl,25,180)
-        super().check('m',m,3,50)
-        super().check('Su',Su,490,637)
-        super().check('b',b,7,38)
-        super().check('Lsh/b',Lsh/b,39,1e4)
-        super().check('d',d,39,1e4)
+        super().check('v_bl',v_bl)
+        super().check('m',m)
+        super().check('Su',Su)
+        super().check('b',b)
+        super().check('Lsh/b',Lsh/b)
+        super().check('d',d)
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -261,7 +336,7 @@ class Ohte(ls.RelBase,uc.Rcheck):
 ################################
 #             SRI              #
 ################################
-class SRI(ls.RelBase,uc.Rcheck):
+class SRI(penMed):
     """
     Stanford Research Institute (SRI) correlation (1963)
     ---
@@ -276,6 +351,15 @@ class SRI(ls.RelBase,uc.Rcheck):
     def __init__(self):
         self.variable=['b','d','m','v','Lsh','Su']
         self.title='Ohte et al. Formula'
+        val_range={
+            'v_bl':[21,122],
+            'b/d':[0.1,0.6],
+            'Lsh/d':[5,8],
+            'b/Lsh':[0.002,0.05],
+            'Lsh/b':[0.0,100],
+            'Limp/d':[5,8]
+        }
+        super().SaveRange(val_range)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -285,12 +369,12 @@ class SRI(ls.RelBase,uc.Rcheck):
         Limp=data['Limp']['mean']
         a6=0.44
         v_bl=a6*b*np.sqrt(Su*d/m*(42.7+Lsh/b))
-        super().check('v_bl',v_bl,21,122)
-        super().check('b/d',b/d,0.1,0.6)
-        super().check('Lsh/d',Lsh/d,5,8)
-        super().check('b/Lsh',b/Lsh,0.002,0.05)
-        super().check('Lsh/b',Lsh/b,0.0,100)
-        super().check('Limp/d',Limp/d,5,8)
+        super().check('v_bl',v_bl)
+        super().check('b/d',b/d)
+        super().check('Lsh/d',Lsh/d)
+        super().check('b/Lsh',b/Lsh)
+        super().check('Lsh/b',Lsh/b)
+        super().check('Limp/d',Limp/d)
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -334,7 +418,7 @@ class SRI(ls.RelBase,uc.Rcheck):
 ################################
 #             SwRI              #
 ################################
-class SwRI(ls.RelBase,uc.Rcheck):
+class SwRI(penMed):
     """
     Southwest Research Institute (SwRI) model (Baker et al., 1980)
     ---
@@ -351,6 +435,7 @@ class SwRI(ls.RelBase,uc.Rcheck):
     def __init__(self):
         self.variable=['b','m','v','th']
         self.title='Southwest Research Institute (SwRI) model'
+        super().SaveRange('Validation process is not defined.')
     def Validation(self,data):
         global S,b1,b2,b3
         tab={"0":{"b1":1414,"b2":0.295,"b3":0.910},
