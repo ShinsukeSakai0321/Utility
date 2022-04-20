@@ -5,32 +5,6 @@ class penMed(ls.RelBase):
     """
     目的:貫通評価クラスが継承する直前のクラス
     """
-    def PoFcontour(self,lmsf,data,x,y,xlabel,ylabel):
-        """
-        目的:JSONデータdata内の二つのパラメータxlabel,ylabelに関するPOF等高線データ作成
-            lmsf:   貫通評価クラスのインスタンス
-            data:   貫通評価計算のための入力データ(JSON形式)
-            x:      x = np.arange(0.006, 0.02, 0.0002)などで発生するデータ列
-            y:      y = np.arange(0.006, 0.02, 0.0002)などで発生するデータ列
-            xlabel: data内の対象ラベル
-            ylabel: data内の対象ラベル
-        戻り値: X,Y,Z
-            plt.pcolormesh(X, Y, Z, cmap='hsv')などにより等高線描画する
-        """
-        X, Y = np.meshgrid(x, y)
-        ZZ=[]
-        for iy in range(len(y)):    
-            yy=Y[:,0][iy]
-            data[ylabel]['mean']=yy
-            za=[]
-            for ix in range(len(x)):
-                xx=X[0][ix]
-                data[xlabel]['mean']=xx
-                lmsf.Reliability(data)
-                pof=lmsf.GetPOF()
-                za.append(pof)
-            ZZ.append(za)
-        return X,Y,ZZ
     def MakeContour(self,lmsf,data,cdata):
         """
         目的:JSONデータdata内の二つのパラメータに関するPOF等高線データ作成
