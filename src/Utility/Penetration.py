@@ -5,7 +5,7 @@ class penMed(ls.RelBase):
     """
     目的:貫通評価クラスが継承する直前のクラス
     """
-    def MakeContour(self,lmsf,data,cdata):
+    def MakeContour(self,data,cdata):
         """
         目的:JSONデータdata内の二つのパラメータに関するPOF等高線データ作成
             lmsf:   貫通評価クラスのインスタンス
@@ -30,24 +30,24 @@ class penMed(ls.RelBase):
         y=np.arange(cdata[key[1]]['min'],cdata[key[1]]['max'],(cdata[key[1]]['max']-cdata[key[1]]['min'])/cdata[key[1]]['div'])
         X, Y = np.meshgrid(x, y)
         #ZZ=[]
-        ZZ=[[] for i in range(len(lmsf.variable)+2)]
+        ZZ=[[] for i in range(len(super().variable)+2)]
         for iy in range(len(y)):    
             yy=Y[:,0][iy]
             data[key[1]]['mean']=yy
             zPoF=[]
             zBeta=[]
-            zAlpha=[[] for i in range(len(lmsf.variable))]
+            zAlpha=[[] for i in range(len(super().variable))]
             for ix in range(len(x)):
                 xx=X[0][ix]
                 data[key[0]]['mean']=xx
-                lmsf.Reliability(data)
-                zPoF.append(lmsf.GetPOF())
-                zBeta.append(lmsf.GetBeta())
-                for ii in range(len(lmsf.variable)):
-                    zAlpha[ii].append(lmsf.GetAlpha()[ii])
+                super().Reliability(data)
+                zPoF.append(super().GetPOF())
+                zBeta.append(super().GetBeta())
+                for ii in range(len(super().variable)):
+                    zAlpha[ii].append(super().GetAlpha()[ii])
             ZZ[0].append(zPoF)
             ZZ[1].append(zBeta)
-            for ii in range(len(lmsf.variable)):
+            for ii in range(len(super().variable)):
                 ZZ[ii+2].append(zAlpha[ii])
         return X,Y,ZZ
     def SaveRange(self,aa):
