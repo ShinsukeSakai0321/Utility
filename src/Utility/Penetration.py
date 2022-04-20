@@ -23,31 +23,31 @@ class penMed(ls.RelBase):
                 i=3: Alpha_1
                 .
                 .
-            Alpha_iは感度値を示し、i=0,1,...はlmsf.variableにより出力される変数の順番と対応している
+            Alpha_iは感度値を示し、i=0,1,...はsuper().GetVar()により出力される変数の順番と対応している
         """
         key=list(cdata.keys())
         x=np.arange(cdata[key[0]]['min'],cdata[key[0]]['max'],(cdata[key[0]]['max']-cdata[key[0]]['min'])/cdata[key[0]]['div'])
         y=np.arange(cdata[key[1]]['min'],cdata[key[1]]['max'],(cdata[key[1]]['max']-cdata[key[1]]['min'])/cdata[key[1]]['div'])
         X, Y = np.meshgrid(x, y)
         #ZZ=[]
-        ZZ=[[] for i in range(len(super().variable)+2)]
+        ZZ=[[] for i in range(len(super().GetVar())+2)]
         for iy in range(len(y)):    
             yy=Y[:,0][iy]
             data[key[1]]['mean']=yy
             zPoF=[]
             zBeta=[]
-            zAlpha=[[] for i in range(len(super().variable))]
+            zAlpha=[[] for i in range(len(super().GetVar()))]
             for ix in range(len(x)):
                 xx=X[0][ix]
                 data[key[0]]['mean']=xx
                 super().Reliability(data)
                 zPoF.append(super().GetPOF())
                 zBeta.append(super().GetBeta())
-                for ii in range(len(super().variable)):
+                for ii in range(len(super().GetVar())):
                     zAlpha[ii].append(super().GetAlpha()[ii])
             ZZ[0].append(zPoF)
             ZZ[1].append(zBeta)
-            for ii in range(len(super().variable)):
+            for ii in range(len(super().GetVar())):
                 ZZ[ii+2].append(zAlpha[ii])
         return X,Y,ZZ
     def SaveRange(self,aa):
