@@ -1,5 +1,6 @@
 from Utility import LimitState as ls
 from sympy import *
+import numpy as np
 class penMed(ls.RelBase):
     """
     目的:貫通評価クラスが継承する直前のクラス
@@ -29,6 +30,51 @@ class penMed(ls.RelBase):
                 pof=lmsf.GetPOF()
                 za.append(pof)
             ZZ.append(za)
+        return X,Y,ZZ
+    def MakeContour(self,lmsf,data,cdata):
+        """
+        目的:JSONデータdata内の二つのパラメータに関するPOF等高線データ作成
+            lmsf:   貫通評価クラスのインスタンス
+            data:   貫通評価計算のための入力データ(JSON形式)
+            cdata:  計算する格子点に関する情報を格納するJSONデータ
+                例: 変数bとmに関する等高線データを発生するとき
+                    cdata={'b':{'min':0.006,'max':0.012,'div':100},
+                        'm':{'min':1,'max':3,'div':100}}
+        戻り値: X,Y,Z
+            plt.pcolormesh(X, Y, Z[i], cmap='hsv')などにより等高線描画する
+            ここで
+                i=0: PoF
+                i=1: Beta
+                i=2; Alpha_0
+                i=3: Alpha_1
+                .
+                .
+            Alpha_iは感度値を示し、i=0,1,...はlmsf.variableにより出力される変数の順番と対応している
+        """
+        key=list(cdata.keys())
+        x=np.arange(cdata[key[0]]['min'],cdata[key[0]]['max'],(cdata[key[0]]['max']-cdata[key[0]]['min'])/cdata[key[0]]['div'])
+        y=np.arange(cdata[key[1]]['min'],cdata[key[1]]['max'],(cdata[key[1]]['max']-cdata[key[1]]['min'])/cdata[key[1]]['div'])
+        X, Y = np.meshgrid(x, y)
+        #ZZ=[]
+        ZZ=[[] for i in range(len(lmsf.variable)+2)]
+        for iy in range(len(y)):    
+            yy=Y[:,0][iy]
+            data[key[1]]['mean']=yy
+            zPoF=[]
+            zBeta=[]
+            zAlpha=[[] for i in range(len(lmsf.variable))]
+            for ix in range(len(x)):
+                xx=X[0][ix]
+                data[key[0]]['mean']=xx
+                lmsf.Reliability(data)
+                zPoF.append(lmsf.GetPOF())
+                zBeta.append(lmsf.GetBeta())
+                for ii in range(len(lmsf.variable)):
+                    zAlpha[ii].append(lmsf.GetAlpha()[ii])
+            ZZ[0].append(zPoF)
+            ZZ[1].append(zBeta)
+            for ii in range(len(lmsf.variable)):
+                ZZ[ii+2].append(zAlpha[ii])
         return X,Y,ZZ
     def SaveRange(self,aa):
         """
