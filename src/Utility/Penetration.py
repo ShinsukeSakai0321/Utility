@@ -8,7 +8,6 @@ class penMed(ls.RelBase):
     def MakeContour(self,data,cdata):
         """
         目的:JSONデータdata内の二つのパラメータに関するPOF等高線データ作成
-            lmsf:   貫通評価クラスのインスタンス
             data:   貫通評価計算のための入力データ(JSON形式)
             cdata:  計算する格子点に関する情報を格納するJSONデータ
                 例: 変数bとmに関する等高線データを発生するとき
