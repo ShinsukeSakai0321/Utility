@@ -27,7 +27,7 @@ class SVMr():
         self.C=x
     def SVM(self):
         self.svm=SVC(kernel=self.kernel,C=self.C,gamma=self.gamma,probability=True).fit(self.X,self.y)
-        self.sv=svm.support_vectors_
+        self.sv=self.svm.support_vectors_
     def SV_RF(self):
         """
         目的:全SV点を出発点とするRFを実施し、最小βを与える点を設計点と確定
