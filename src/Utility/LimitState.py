@@ -411,6 +411,7 @@ class LHSbase:
     """
     目的:LHS+USの乱数発生を管理するための基底クラス
     RSモデルの例
+        from Utility import LimitState as ls
         class rnd_RS(LHSbase):
             def __init__(self,nv):
                 super().__init__(nv)
