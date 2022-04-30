@@ -400,9 +400,47 @@ class MetalLoss(LSFM):
     def calc(self):
         super().RF()
     def PSFCalc(self):
-        psf=selff.muX/super().GetDP()
+        psf=self.muX/super().GetDP()
         psf[0]=1/psf[0]
         psf[1]=1/psf[1]
         return psf
     def G(self):
-        return super().GetG()                
+        return super().GetG()  
+from pyDOE import *
+class LHSbase:
+    """
+    目的:LHS+USの乱数発生を管理するための基底クラス
+    RSモデルの例
+        class rnd_RS(LHSbase):
+            def __init__(self,nv):
+                super().__init__(nv)
+            def g(self,rnd):  #限界状態関数gを定義する。rnd:発生された乱数列。変数の順番に格納されている。
+                    rr=rnd[:,0]  #変数の順番に乱数列を取り出していく
+                    ss=rnd[:,1]
+                    gval=rr-ss  #限界状態関数の計算結果リスト
+                    return gval
+        #### プログラム例 ####
+        n=300
+        Mr=170
+        Sr=20
+        Ms=100
+        Ss=20
+        k=3
+        means = [Mr,Ms]  #変数の順番はこのリスト内の順番
+        stdvs = [Sr,Ss]
+        nv=len(means) #変数の数
+        lhb=rnd_RS(nv)
+        rnd,t=lhb.Calc(n,k,means,stdvs)
+        X_std=(rnd-means)/stdvs
+
+    """
+    def __init__(self,nv):
+        self.nv=nv        
+    def Calc(self,n,k,means,stdvs):
+        design = lhs(self.nv, samples=n,criterion='maximin')
+        u=design
+        for i in range(self.nv):
+            u[:, i] = k*stdvs[i]*(2*design[:,i]-1)+means[i]
+        rnd=u
+        t=(np.sign(self.g(rnd))+1)/2
+        return rnd,t              
