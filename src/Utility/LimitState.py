@@ -431,8 +431,7 @@ class LHSbase:
         stdvs = [Sr,Ss]
         nv=len(means) #変数の数
         lhb=rnd_RS(nv)
-        rnd,t=lhb.Calc(n,k,means,stdvs)
-        X_std=(rnd-means)/stdvs
+        rnd,t=lhb.Calc(n,k,means,stdvs) #乱数列と破損、非破損データリスト
 
     """
     def __init__(self,nv):
