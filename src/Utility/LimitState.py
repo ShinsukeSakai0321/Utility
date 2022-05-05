@@ -412,7 +412,7 @@ class LHSbase:
     目的:LHS+USの乱数発生を管理するための基底クラス
     RSモデルの例
         from Utility import LimitState as ls
-        class rnd_RS(LHSbase):
+        class rnd_RS(ls.LHSbase):
             def __init__(self,nv):
                 super().__init__(nv)
             def g(self,rnd):  #限界状態関数gを定義する。rnd:発生された乱数列。変数の順番に格納されている。
@@ -421,26 +421,47 @@ class LHSbase:
                     gval=rr-ss  #限界状態関数の計算結果リスト
                     return gval
         #### プログラム例 ####
-        n=300
-        Mr=170
-        Sr=20
-        Ms=100
-        Ss=20
-        k=3
-        means = [Mr,Ms]  #変数の順番はこのリスト内の順番
-        stdvs = [Sr,Ss]
-        nv=len(means) #変数の数
-        lhb=rnd_RS(nv)
-        rnd,t=lhb.Calc(n,k,means,stdvs) #乱数列と破損、非破損データリスト
+        data={"r":{"mean":170,"cov":20/170,"dist":"normal"},
+             "s":{"mean":100,"cov":20/100,"dist":"normal"},
+             }
+        nv=2 #変数の数
+        n=300 #サンプル点数
+        k=3 #サンプリングの領域の広さ
+        lhb=rnd_RS(nv) #インスタンスの生成
+        lhb.SetData(data) #データセット
+        rnd,t=lhb.Calc(n,k) #乱数発生
+        X_std=(rnd-lhb.Means())/lhb.Stdvs() #データの基準化
+        print(lhb.gMean()) #平均値でのg値の値
 
     """
     def __init__(self,nv):
-        self.nv=nv        
-    def Calc(self,n,k,means,stdvs):
+        self.nv=nv
+    def SetData(self,data):
+        self.data=data
+        means=[]
+        stdvs=[]
+        for key in data:
+            mean=data[key]['mean']
+            std=data[key]['cov']*mean
+            means.append(mean)
+            stdvs.append(std)
+        self.means=means
+        self.stdvs=stdvs
+    def Means(self):
+        return self.means
+    def Stdvs(self):
+        return self.stdvs
+    def gMean(self):
+        num=self.nv
+        val=np.zeros((num,2))
+        for i in range(num):
+            val[0,i]=self.means[i]
+        return self.g(val)[0]
+    def Calc(self,n,k):
         design = lhs(self.nv, samples=n,criterion='maximin')
         u=design
         for i in range(self.nv):
-            u[:, i] = k*stdvs[i]*(2*design[:,i]-1)+means[i]
+            u[:, i] = k*self.stdvs[i]*(2*design[:,i]-1)+self.means[i]
         rnd=u
         t=(np.sign(self.g(rnd))+1)/2
-        return rnd,t              
+        return rnd,t             
