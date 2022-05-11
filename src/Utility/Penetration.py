@@ -82,10 +82,15 @@ class BRL(penMed):
     """
     Ballistic Research Laboratories (BRL) model (1968)
     ---
+    ***variables***
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
     v   velocity of impactor
+    ***constants***
+    Limp    length of impactor
+    Lsh     unsupported shield panel span
+    Su      ultimate tensile strength of shield material
     """
     def __init__(self):
         self.variable=['b','d','m','v']
@@ -511,4 +516,89 @@ class SwRI(penMed):
             dGdX[1] =eval(self.d1)
             dGdX[2] =eval(self.d2)
             dGdX[3] =eval(self.d3)
+            super().SetdGdX(dGdX)
+################################
+#             Lambert          #
+################################
+class Lambert(penMed):
+    """
+    Lambert and Jonas Approximation (1976)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    th  angle between a normal vector to a shield surface and the direction of impact
+    v   velocity of impactor
+    ***constants***
+    Limp    length of impactor
+    ro_imp  material density of impactor
+    a10     1750 for aluminum and 4000 for rolled homogeneous armor(RHA)
+    """
+    a10=0
+    Limp=0
+    def __init__(self):
+        self.variable=['b','d','m','th','v']
+        self.title='Lambert and Jonas Approximation'
+        val_range={
+            'm':[0.0005,3.63],
+            'd':[0.002,0.05],
+            'Limp/d':[4,30],
+            'b':[0.006,0.15],
+            'th':[0,60/360],
+            'ro_imp':[7800,19000]
+        }
+        super().SaveRange(val_range)
+    def Validation(self,data):
+        global a10,Limp
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        th=data['th']['mean']
+        Limp=data['Limp']['mean']
+        ro_imp=data['ro_imp']['mean']
+        a10=data['a10']['mean']
+        super().check('b',b)
+        super().check('d',d)
+        super().check('m',m)
+        super().check('th',th)
+        super().check('Limp/d',Limp/d)
+        super().check('ro_imp',ro_imp)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global a10,Limp
+            self.n=n
+            super().__init__(self.n)
+            b,d,m,th,v=symbols('b d m th v')
+            z=(b/d)*(1/cos(th))**0.75
+            f=z+exp(z)-1
+            g=31.62*a10*(Limp/d)**0.15*sqrt(f*d**3/m)-v
+            self.gg=str(g)
+            self.d0=str(diff(g,b))
+            self.d1=str(diff(g,d))
+            self.d2=str(diff(g,m))
+            self.d3=str(diff(g,th))
+            self.d4=str(diff(g,v))
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            th=X[3]
+            v=X[4]
+            g=eval(self.gg)
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            th=X[3]
+            v=X[4]
+            dGdX[0]=eval(self.d0)
+            dGdX[1] =eval(self.d1)
+            dGdX[2] =eval(self.d2)
+            dGdX[3] =eval(self.d3)
+            dGdX[4] =eval(self.d4)
             super().SetdGdX(dGdX)
