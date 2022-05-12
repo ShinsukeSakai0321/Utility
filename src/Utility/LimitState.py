@@ -256,6 +256,10 @@ class LSFM:
         self.lim.SetX(X)
         self.lim.gcalc()
         return self.lim.GetG()
+    def Gcalc(self,X):
+        self.lim.Set(X)
+        self.lim.gcalc()
+        return self.lim.GetG()
     def GetdGdX(self):
         return self.lim.GetdGdX()
 class GeneralTreat(LSFM):
