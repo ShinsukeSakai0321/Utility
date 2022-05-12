@@ -602,3 +602,81 @@ class Lambert(penMed):
             dGdX[3] =eval(self.d3)
             dGdX[4] =eval(self.d4)
             super().SetdGdX(dGdX)
+################################
+#             Neilson          #
+################################
+class Neilson(penMed):
+    """
+    Nelson Formula (1985)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Su  ultimate tensile strength of shield material
+    Lsh unsupported shield panel span
+    v   velocity of impactor
+    ***constants***
+    Limp   length of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Su','Lsh','v']
+        self.title='Nelson Formula'
+        val_range={
+            'b/d':[0.14,0.64],
+            'Lsh/d':[4,22],
+            'Limp/d':[13,1e4],
+        }
+        super().SaveRange(val_range)
+    def Validation(self,data):
+        global a10,Limp
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        Limp=data['Limp']['mean']
+        super().check('b/d',b/d)
+        super().check('Lsh/d',Lsh/d)
+        super().check('Limp/d',Limp/d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global a10,Limp
+            self.n=n
+            super().__init__(self.n)
+            b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
+            a12=1.67
+            g=a12*d*sqrt(Su*d/m)*(b/d)**0.85*(Lsh/d)**0.3-v
+            self.gg=str(g)
+            self.d0=str(diff(g,b))
+            self.d1=str(diff(g,d))
+            self.d2=str(diff(g,m))
+            self.d3=str(diff(g,Su))
+            self.d4=str(diff(g,Lsh))
+            self.d5=str(diff(g,v))
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            g=eval(self.gg)
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            dGdX[0]=eval(self.d0)
+            dGdX[1] =eval(self.d1)
+            dGdX[2] =eval(self.d2)
+            dGdX[3] =eval(self.d3)
+            dGdX[4] =eval(self.d4)
+            dGdX[5] =eval(self.d5)
+            super().SetdGdX(dGdX)
