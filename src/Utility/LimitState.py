@@ -322,6 +322,8 @@ class RelBase:
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
         self.lsfm.RF()
+    def GetDP(self):
+        return self.lsfm.GetDP()
     def Geval(self,data):
         self.SetData(data)
         lsfm=Gmanage(len(self.variable),self.muX,self.sigmmaX,self.dist,self.G)
