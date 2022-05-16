@@ -770,3 +770,81 @@ class Jowett(penMed):
             dGdX[3] =eval(self.d3)
             dGdX[4] =eval(self.d4)
             super().SetdGdX(dGdX)
+################################
+#             WenJones         #
+################################
+class WenJones(pen.penMed):
+    """
+    Wen and Jones Formula (1992)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Su  ultimate tensile strength of shield material
+    Lsh unsupported shield panel span
+    v   velocity of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Su','Lsh','v']
+        self.title='Jowett Formula'
+        val_range={
+            'vbl':[0,20],
+            'Su':[340,440],
+            'Lsh/d':[40,40],
+            'Lsh/b':[25,100],
+            'b/d':[0.4,1.6]
+        }
+        super().SaveRange(val_range)
+    def Validation(self,data):
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        vbl=2*d*np.sqrt(Su*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))
+        super().check('vbl',vbl)
+        super().check('Su',Su)
+        super().check('Lsh/d',Lsh/d)
+        super().check('Lsh/b',Lsh/b)
+        super().check('b/d',b/d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global ratio,omg
+            self.n=n
+            super().__init__(self.n)
+            b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
+            g=2*d*sqrt(Su*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))-v
+            self.gg=str(g)
+            self.d0=str(diff(g,b))
+            self.d1=str(diff(g,d))
+            self.d2=str(diff(g,m))
+            self.d3=str(diff(g,Su))
+            self.d4=str(diff(g,Lsh))
+            self.d5=str(diff(g,v))
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            g=eval(self.gg)
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            dGdX[0]=eval(self.d0)
+            dGdX[1] =eval(self.d1)
+            dGdX[2] =eval(self.d2)
+            dGdX[3] =eval(self.d3)
+            dGdX[4] =eval(self.d4)
+            dGdX[5] =eval(self.d5)
+            super().SetdGdX(dGdX)
