@@ -773,7 +773,7 @@ class Jowett(penMed):
 ################################
 #             WenJones         #
 ################################
-class WenJones(pen.penMed):
+class WenJones(penMed):
     """
     Wen and Jones Formula (1992)
     ---
