@@ -848,3 +848,82 @@ class WenJones(penMed):
             dGdX[4] =eval(self.d4)
             dGdX[5] =eval(self.d5)
             super().SetdGdX(dGdX)
+################################
+#             AlyLi         #
+################################
+class AlyLi(penMed):
+    """
+    Aly and Li Formulas (2008)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Su  ultimate tensile strength of shield material
+    Lsh unsupported shield panel span
+    v   velocity of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Su','Lsh','v']
+        self.title='Aly and Li Formulas'
+        val_range={
+            'b/d':[0.1,0.64]
+        }
+        super().SaveRange(val_range)
+    def Validation(self,data):
+        global v_Lsh,v_d,v_b
+        v_b=data['b']['mean']
+        v_d=data['d']['mean']
+        v_Lsh=data['Lsh']['mean']
+        super().check('b/d',v_b/v_d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global v_Lsh,v_d,v_b
+            self.n=n
+            super().__init__(self.n)
+            b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
+            vbl=0
+            if v_Lsh/v_d <=12:
+                if v_b/v_d > 0.1 and v_b/v_d<0.25:
+                    vbl=1.79*d*sqrt(Su*d/m)*(b/d)**0.87*(Lsh/d)**0.305
+                if v_b/v_d>=0.25 and v_b/v_d<0.64:
+                    vbl=1.72*d*sqrt(Su*d/m)*(b/d)**0.42*(Lsh/d)**0.35
+            if v_Lsh/v_d>12:
+                if v_b/v_d > 0.1 and v_b/v_d<0.25:
+                    vbl=3.44*d*sqrt(Su*d/m)*(b/d)**0.78
+                if v_b/v_d>=0.25 and v_b/v_d<0.64:
+                    vbl=1.72*d*sqrt(Su*d/m)*(b/d)**0.41                
+            g=vbl-v
+            self.gg=str(g)
+            self.d0=str(diff(g,b))
+            self.d1=str(diff(g,d))
+            self.d2=str(diff(g,m))
+            self.d3=str(diff(g,Su))
+            self.d4=str(diff(g,Lsh))
+            self.d5=str(diff(g,v))
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            g=eval(self.gg)
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            dGdX[0]=eval(self.d0)
+            dGdX[1] =eval(self.d1)
+            dGdX[2] =eval(self.d2)
+            dGdX[3] =eval(self.d3)
+            dGdX[4] =eval(self.d4)
+            dGdX[5] =eval(self.d5)
+            super().SetdGdX(dGdX)
