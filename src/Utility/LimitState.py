@@ -330,10 +330,8 @@ class RelBase:
         return self.lsfm.GetDP()
     def Gcalc(self,X):
         return self.lsfm.Gcalc(X)
-    def Geval(self,data):
-        self.SetData(data)
-        lsfm=Gmanage(len(self.variable),self.muX,self.sigmmaX,self.dist,self.G)
-        return lsfm.GetG()
+    def Gmean(self):
+        return self.lsfm.GetG()
     def GetBeta(self):
         return self.lsfm.GetBeta()
     def GetAlpha(self):
