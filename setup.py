@@ -1,7 +1,7 @@
 from setuptools import setup,find_packages
 setup(
     name="Utility",
-    version="1.2.0",
+    version="1.2.1",
     author="Shinsuke Sakai",
     url="https://github/ShinsukeSakai0321/Utility.git",
     packages=find_packages("src"),

@@ -331,7 +331,7 @@ class RelBase:
     def Gcalc(self,X):
         return self.lsfm.Gcalc(X)
     def Gmean(self):
-        return self.lsfm.GetG()
+        return self.lsfm.Gcalc(self.muX)
     def GetBeta(self):
         return self.lsfm.GetBeta()
     def GetAlpha(self):
