@@ -326,11 +326,11 @@ class RelBase:
             else:
                 sX=data[aa]['sd']
             self.sigmmaX.append(sX)       
-    def Reliability(self,data):
+    def Reliability(self,data,start):
         n=len(self.variable)
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
-        self.lsfm.RF()
+        self.lsfm.RF(start)
     def GetDP(self):
         return self.lsfm.GetDP()
     def Gcalc(self,X):
