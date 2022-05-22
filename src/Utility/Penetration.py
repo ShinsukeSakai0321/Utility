@@ -72,6 +72,16 @@ class penMed(ls.RelBase):
             print('**Validation of [',cond,'] satisfied**')
             return
         print('**Validation of [',cond,'] not satisfied**:',',Value=',val)
+    def GetMean(self,data):
+        """
+        目的:Jsonデータ　dataから、変数の平均値を取り出しリストを戻す
+        """
+        dmean=[]
+        for aa in data.keys():
+            if 'cov' in data[aa].keys() or 'sd' in data[aa].keys():
+                dmean.append(data[aa]['mean'])
+        return dmean
+
 """
 貫通評価モジュール
 """

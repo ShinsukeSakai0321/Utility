@@ -177,17 +177,22 @@ class LSFM:
         return self.muX
     def SetMu(self,aa):
         self.muX=aa
-    def RF(self):
+    def RF(self,Xstart):
+        """
+        Racwitz-Fiessler algoritm
+        Xstart: list of starting point
+        """
         betaold=40
         delta=1e-6
         munormX=np.zeros(self.n)
         sigmmanormX=np.zeros(self.n)
-        X=self.muX.copy()
+        #X=self.muX.copy()
+        X=Xstart
         for i in range(100):
             for j in range(self.n):
                 Valu=self.Distr[j].Eq(X[j])
-                munormX[j]=Valu[0]
-                sigmmanormX[j]=Valu[1]
+                munormX[j]=Valu[0]#非正規分布の正規化後の平均値
+                sigmmanormX[j]=Valu[1]#非正規分布の正規化後の標準偏差
             Xdush=(X-munormX)/sigmmanormX
             Xdush_old=Xdush
             self.lim.SetX(X)
