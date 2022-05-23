@@ -330,6 +330,12 @@ class RelBase:
                 sX=data[aa]['sd']
             self.sigmmaX.append(sX)       
     def Reliability(self,data,start='Origin',Xstart=[100,100]):
+        """
+        Reliability analysis by RF algorithm
+                start:  'Origin'      start point is origin(Default)
+                        'Coordinate'  start point is an arbitrary coordinate
+                Xstart: list of starting point(Default [100,100])
+        """
         n=len(self.variable)
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
