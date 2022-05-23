@@ -177,17 +177,20 @@ class LSFM:
         return self.muX
     def SetMu(self,aa):
         self.muX=aa
-    def RF(self,Xstart):
+    def RF(self,start='Origin',Xstart=[100,100]):
         """
         Racwitz-Fiessler algoritm
+        start:  'Origin'      start point is origin(Default)
+                'Coordinate'  start point is an arbitrary coordinate
         Xstart: list of starting point
         """
         betaold=40
         delta=1e-6
         munormX=np.zeros(self.n)
         sigmmanormX=np.zeros(self.n)
-        #X=self.muX.copy()
-        X=Xstart
+        X=self.muX.copy()
+        if start!='Origin':
+            X=Xstart
         for i in range(100):
             for j in range(self.n):
                 Valu=self.Distr[j].Eq(X[j])
