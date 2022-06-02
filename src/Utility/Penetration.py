@@ -574,6 +574,12 @@ class Lambert(penMed):
         super().check('th',th)
         super().check('Limp/d',Limp/d)
         super().check('ro_imp',ro_imp)
+    def SetMaterial(mat):
+        global a10
+        if mat=='aluminum':
+            a10=1750
+        if mat=='RHA':
+            a10=4000
     class G(ls.Lbase):
         def __init__(self,n):
             global a10,Limp
