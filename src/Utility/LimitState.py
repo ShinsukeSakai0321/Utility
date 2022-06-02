@@ -340,9 +340,23 @@ class RelBase:
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
         self.lsfm.RF(start=start,Xstart=Xstart)
+    def Geval(self,xx):
+        """
+        Reliabilityを実施せずに、g値を計算する
+        """
+        n=len(xx)
+        # muuX,sigmmaX,distにはダミーの値を入れておく
+        muX=[0 for x in range(n)]
+        sigmmaX=[0 for x in range(n)]
+        dist=['normal' for x in range(n)]
+        self.lsfm=Gmanage(n,muX,sigmmaX,dist,self.G)
+        return self.lsfm.Gcalc(xx)
     def GetDP(self):
         return self.lsfm.GetDP()
     def Gcalc(self,X):
+        """
+        Reliability実施後にg値を計算するとき、もっともGevalがあれば、これは不要かも
+        """
         return self.lsfm.Gcalc(X)
     def Gmean(self):
         return self.lsfm.Gcalc(self.muX)
