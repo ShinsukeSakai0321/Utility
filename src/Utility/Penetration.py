@@ -540,15 +540,18 @@ class Lambert(penMed):
     m   initial mass of the impactor
     th  angle between a normal vector to a shield surface and the direction of impact
     v   velocity of impactor
-    ***constants***
     Limp    length of impactor
+    ***constants***   
     ro_imp  material density of impactor
     a10     1750 for aluminum and 4000 for rolled homogeneous armor(RHA)
+    *** 注意 ***
+    SetMaterial(mat)で材料指定のこと
+    mat: 'aluminum' or 'RHA'
+          RHA:rolled homogeneous armor
     """
     a10=0
-    Limp=0
     def __init__(self):
-        self.variable=['b','d','m','th','v']
+        self.variable=['b','d','m','th','v','Limp']
         self.title='Lambert and Jonas Approximation'
         val_range={
             'm':[0.0005,3.63],
@@ -560,14 +563,13 @@ class Lambert(penMed):
         }
         super().SaveRange(val_range)
     def Validation(self,data):
-        global a10,Limp
+        global a10
         b=data['b']['mean']
         d=data['d']['mean']
         m=data['m']['mean']
         th=data['th']['mean']
         Limp=data['Limp']['mean']
         ro_imp=data['ro_imp']['mean']
-        a10=data['a10']['mean']
         super().check('b',b)
         super().check('d',d)
         super().check('m',m)
@@ -582,10 +584,10 @@ class Lambert(penMed):
             a10=4000
     class G(ls.Lbase):
         def __init__(self,n):
-            global a10,Limp
+            global a10
             self.n=n
             super().__init__(self.n)
-            b,d,m,th,v=symbols('b d m th v')
+            b,d,m,th,v,Limp=symbols('b d m th v Limp')
             z=(b/d)*(1/cos(th))**0.75
             f=z+exp(z)-1
             g=31.62*a10*(Limp/d)**0.15*sqrt(f*d**3/m)-v
@@ -595,6 +597,7 @@ class Lambert(penMed):
             self.d2=str(diff(g,m))
             self.d3=str(diff(g,th))
             self.d4=str(diff(g,v))
+            self.d5=str(diff(g,Limp))
         def gcalc(self):
             X=super().GetX()
             b=X[0]
@@ -602,6 +605,7 @@ class Lambert(penMed):
             m=X[2]
             th=X[3]
             v=X[4]
+            Limp=X[5]
             g=eval(self.gg)
             super().SetG(g)
         def dGdXcalc(self):
@@ -612,11 +616,13 @@ class Lambert(penMed):
             m=X[2]
             th=X[3]
             v=X[4]
+            Limp=X[5]
             dGdX[0]=eval(self.d0)
             dGdX[1] =eval(self.d1)
             dGdX[2] =eval(self.d2)
             dGdX[3] =eval(self.d3)
             dGdX[4] =eval(self.d4)
+            dGdX[5] =eval(self.d5)
             super().SetdGdX(dGdX)
 ################################
 #             Neilson          #
