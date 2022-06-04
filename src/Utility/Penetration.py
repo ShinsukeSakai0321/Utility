@@ -718,6 +718,8 @@ class Jowett(penMed):
     ***constants***
     Lsh unsupported shield panel span
     Limp   length of impactor
+    ***method***
+    SetParam(b,d,Lsh)  g計算のためのparameter設定
     """
     def __init__(self):
         self.variable=['b','d','m','Su','v']
@@ -729,6 +731,13 @@ class Jowett(penMed):
             'b/d':[0.1,0.64]
         }
         super().SaveRange(val_range)
+    def SetParam(self,b,d,Lsh):
+        global ratio,omg
+        if Lsh/d<=12:
+            omg=(Lsh/d)**0.305
+        else:
+            omg=12.0
+        ratio=b/d       
     def Validation(self,data):
         global ratio,omg
         b=data['b']['mean']
