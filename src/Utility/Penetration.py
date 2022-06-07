@@ -812,7 +812,7 @@ class WenJones(penMed):
     b   thickness of a shield
     d   maximum diameter of impactor
     m   initial mass of the impactor
-    Su  ultimate tensile strength of shield material
+    Sy  yield stress of shield material
     Lsh unsupported shield panel span
     v   velocity of impactor
     """
@@ -858,7 +858,7 @@ class WenJones(penMed):
             b=X[0]
             d=X[1]
             m=X[2]
-            Su=X[3]
+            Sy=X[3]
             Lsh=X[4]
             v=X[5]
             g=eval(self.gg)
