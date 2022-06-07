@@ -817,7 +817,7 @@ class WenJones(penMed):
     v   velocity of impactor
     """
     def __init__(self):
-        self.variable=['b','d','m','Su','Lsh','v']
+        self.variable=['b','d','m','Sy','Lsh','v']
         self.title='Jowett Formula'
         val_range={
             'vbl':[0,20],
@@ -831,9 +831,9 @@ class WenJones(penMed):
         b=data['b']['mean']
         d=data['d']['mean']
         m=data['m']['mean']
-        Su=data['Su']['mean']
+        Sy=data['Sy']['mean']
         Lsh=data['Lsh']['mean']
-        vbl=2*d*np.sqrt(Su*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))
+        vbl=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))
         super().check('vbl',vbl)
         super().check('Su',Su)
         super().check('Lsh/d',Lsh/d)
@@ -844,13 +844,13 @@ class WenJones(penMed):
             global ratio,omg
             self.n=n
             super().__init__(self.n)
-            b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
-            g=2*d*sqrt(Su*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))-v
+            b,d,m,Sy,Lsh,v=symbols('b d m Sy Lsh v')
+            g=2*d*sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
             self.d1=str(diff(g,d))
             self.d2=str(diff(g,m))
-            self.d3=str(diff(g,Su))
+            self.d3=str(diff(g,Sy))
             self.d4=str(diff(g,Lsh))
             self.d5=str(diff(g,v))
         def gcalc(self):
