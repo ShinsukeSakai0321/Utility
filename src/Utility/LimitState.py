@@ -246,7 +246,7 @@ class LSFM:
             self.beta=betanew
         else:#平均値が破損領域に存在していたときには、信頼性指標の符合を反転する
             self.beta=-betanew
-        self.POF=norm.sf(betanew)
+        self.POF=norm.sf(self.beta)
         self.DP=X
         self.ncon=i
     def GetSigm(self):
