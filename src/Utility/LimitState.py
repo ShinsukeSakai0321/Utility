@@ -156,6 +156,7 @@ class LSFM:
     GetPSF()  部分安全係数の取得
     """
     def __init__(self,n,Mu,sigmmaX,dist):
+        #これを呼ぶ以前にDefineGでself.limを定義しておくこと
         self.n=n
         self.muX=Mu
         self.sigmmaX=sigmmaX
@@ -164,6 +165,9 @@ class LSFM:
         self.beta=0.0
         self.POF=1.0
         self.Distr=[]
+        self.flag=1#平均値が破損領域の時-1,非破損領域の解き1
+        if self.GetG()<0:
+            self.flag=-1
         #self.lim=Lbase
         for i in range(n):
             if self.dist[i]=='normal':
@@ -238,7 +242,10 @@ class LSFM:
                 else:
                     g_hantei =g_hantei
             X = munormX + sigmmanormX * Xdush
-        self.beta=betanew
+        if self.flag>0:
+            self.beta=betanew
+        else:#平均値が破損領域に存在していたときには、信頼性指標の符合を反転する
+            self.beta=-betanew
         self.POF=norm.sf(betanew)
         self.DP=X
         self.ncon=i
@@ -340,8 +347,8 @@ class RelBase:
         n=len(self.variable)
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
-        if self.lsfm.GetG()>0:#平均値でのg値が破損領域にあるときには、自動的にβ=0,Pf=1として終了する。
-            self.lsfm.RF(start=start,Xstart=Xstart)
+        #if self.lsfm.GetG()>0:#平均値でのg値が破損領域にあるときには、自動的にβ=0,Pf=1として終了する。
+        self.lsfm.RF(start=start,Xstart=Xstart)
     def Geval(self,xx):
         """
         Reliabilityを実施せずに、g値を計算する
