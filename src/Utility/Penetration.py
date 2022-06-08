@@ -869,7 +869,7 @@ class WenJones(penMed):
             b=X[0]
             d=X[1]
             m=X[2]
-            Su=X[3]
+            Sy=X[3]
             Lsh=X[4]
             v=X[5]
             dGdX[0]=eval(self.d0)

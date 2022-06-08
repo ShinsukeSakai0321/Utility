@@ -162,6 +162,7 @@ class LSFM:
         self.dist=dist
         self.alphai=np.zeros(n)
         self.beta=0.0
+        self.POF=1.0
         self.Distr=[]
         #self.lim=Lbase
         for i in range(n):
@@ -302,7 +303,7 @@ class Gmanage(LSFM):
     def __init__(self,n,Mu,sigmmaX,dist,g):
         self.n=n
         gg=g(self.n)
-        super().DefineG(gg)
+        super().DefineG(gg)#この時点でLSFM.limにGが定義される
         super().__init__(n,Mu,sigmmaX,dist)
 class RelBase:
     """汎用信頼性評価のための基底クラス
@@ -339,7 +340,8 @@ class RelBase:
         n=len(self.variable)
         self.SetData(data)
         self.lsfm=Gmanage(n,self.muX,self.sigmmaX,self.dist,self.G)
-        self.lsfm.RF(start=start,Xstart=Xstart)
+        if self.lsfm.GetG()>0:#平均値でのg値が破損領域にあるときには、自動的にβ=0,Pf=1として終了する。
+            self.lsfm.RF(start=start,Xstart=Xstart)
     def Geval(self,xx):
         """
         Reliabilityを実施せずに、g値を計算する
