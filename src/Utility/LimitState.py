@@ -355,8 +355,8 @@ class RelBase:
         """
         n=len(xx)
         # muuX,sigmmaX,distにはダミーの値を入れておく
-        muX=[0 for x in range(n)]
-        sigmmaX=[0 for x in range(n)]
+        muX=[0.0001 for x in range(n)]
+        sigmmaX=[0.0001 for x in range(n)]
         dist=['normal' for x in range(n)]
         self.lsfm=Gmanage(n,muX,sigmmaX,dist,self.G)
         return self.lsfm.Gcalc(xx)
