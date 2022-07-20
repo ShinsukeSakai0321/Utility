@@ -241,14 +241,7 @@ class THOR(penMed):
     def __init__(self):
         self.variable=['b','d','m','v','th']
         self.title='THOR Equations'
-        super().SaveRange('Validation process is not defined.')
-    def setMaterial(self,mat):
-        """
-        目的:材料の設定
-           mat: "Magnesium","Aluminum","CastIron","Titanium","FaceSteel","MildSteel","HardSteel","Copper","Lead"
-        """
-        global C1,a1,b1,g1
-        tab={"Magnesium":{"C1":6.349,"a1":1.004,"b1":-1.076,"g1":0.966},
+        self.tab={"Magnesium":{"C1":6.349,"a1":1.004,"b1":-1.076,"g1":0.966},
              "Aluminum":{"C1":6.185,"a1":0.903,"b1":-0.941,"g1":1.098},
              "CastIron":{"C1":10.153,"a1":2.186,"b1":-2.204,"g1":2.156},
              "Titanium":{"C1":7.552,"a1":1.325,"b1":-1.314,"g1":1.643},
@@ -258,10 +251,22 @@ class THOR(penMed):
              "Copper":{"C1":14.065,"a1":3.476,"b1":-3.687,"g1":4.27},
              "Lead":{"C1":10.955,"a1":2.735,"b1":-2.753,"g1":3.59}
             }
-        C1=tab[mat]["C1"]
-        a1=tab[mat]["a1"]
-        b1=tab[mat]["b1"]
-        g1=tab[mat]["g1"]
+        super().SaveRange('Validation process is not defined.')
+    def MatList(self):
+        """
+        目的:登録されている材料名リストを返す
+        """
+        return list(self.tab.keys())
+    def setMaterial(self,mat):
+        """
+        目的:材料の設定
+           mat: "Magnesium","Aluminum","CastIron","Titanium","FaceSteel","MildSteel","HardSteel","Copper","Lead"
+        """
+        global C1,a1,b1,g1
+        C1=self.tab[mat]["C1"]
+        a1=self.tab[mat]["a1"]
+        b1=self.tab[mat]["b1"]
+        g1=self.tab[mat]["g1"]
     class G(ls.Lbase):
         def __init__(self,n):
             global C1,a1,b1,g1
