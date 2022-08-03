@@ -72,6 +72,50 @@ class UnitBaseT(UnitBase):
         elif v2==0.0:
             val2=val1+273.15
         return val2
+class UnitNengo(UnitBase):
+    def __init__(self,unit_list):
+        super().__init__(unit_list)
+    def Calc(self,v1,v2,v):
+        val1=val2=0.0
+        Cur1=int(v1)
+        Cur2=int(v2)
+        if Cur1==0:
+            val1=v+1867
+        elif Cur1==1:
+            val1=v+1911
+        elif Cur1==2:
+            val1=v+1925
+        elif Cur1==3:
+            val1=v+1988
+        elif Cur1==4:
+            val1=v+2018
+        elif Cur1==5:
+            val1=v
+        if Cur2==0:
+            val2=val1-1867
+        elif Cur2==1:
+            val2=val1-1911
+        elif Cur2==2:
+            val2=val1-1925
+        elif Cur2==3:
+            val2=val1-1988
+        elif Cur2==4:
+            val2=val1-2018
+        elif Cur2==5:
+            val2=val1
+        return int(val2)
+class Nengo(UnitNengo):
+    def __init__(self):
+        super().__init__([
+            ('Meiji',0.0),
+            ('Taisho',1.0),
+            ('Syowa',2.0),
+            ('Heisei',3.0),
+            ('Reiwa',4.0),
+            ('Seireki',5.0),
+            ])
+        
+
 class Length(UnitBase):
     """
     単位:長さ
