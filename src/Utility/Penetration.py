@@ -49,6 +49,19 @@ class penMed(ls.RelBase):
             for ii in range(len(super().GetVar())):
                 ZZ[ii+2].append(zAlpha[ii])
         return X,Y,ZZ
+    def Gcheck(self,data):
+        """
+        目的:dataについてg値の計算を行う
+        """
+        xx=[data[w]['mean'] for w in self.GetVariable()]
+        return super().Geval(xx)
+    def SaveVariable(self,aa):
+        """
+        目的:確率変数の保存
+        """
+        self.Variable=aa
+    def GetVariable(self):
+        return self.Variable
     def SaveRange(self,aa):
         """
         目的:適用範囲データの保存
@@ -113,6 +126,7 @@ class BRL(penMed):
             'Su':[315,500]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -181,6 +195,7 @@ class DeMarre(penMed):
             'm':[0.1,50]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -252,6 +267,7 @@ class THOR(penMed):
              "Lead":{"C1":10.955,"a1":2.735,"b1":-2.753,"g1":3.59}
             }
         super().SaveRange('Validation process is not defined.')
+        super().SaveVariable(self.variable)
     def MatList(self):
         """
         目的:登録されている材料名リストを返す
@@ -328,6 +344,7 @@ class Ohte(penMed):
             'd':[39,1e4]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -399,6 +416,7 @@ class SRI(penMed):
             'Limp/d':[5,8]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -475,6 +493,7 @@ class SwRI(penMed):
         self.variable=['b','m','v','th']
         self.title='Southwest Research Institute (SwRI) model'
         super().SaveRange('Validation process is not defined.')
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         global S,b1,b2,b3
         tab={"0":{"b1":1414,"b2":0.295,"b3":0.910},
@@ -567,6 +586,7 @@ class Lambert(penMed):
             'ro_imp':[7800,19000]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         global a10
         b=data['b']['mean']
@@ -634,7 +654,7 @@ class Lambert(penMed):
 ################################
 class Neilson(penMed):
     """
-    Nelson Formula (1985)
+    Neilson Formula (1985)
     ---
     ***variables***
     b   thickness of a shield
@@ -655,6 +675,7 @@ class Neilson(penMed):
             'Limp/d':[13,1e4],
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         global a10,Limp
         b=data['b']['mean']
@@ -736,6 +757,7 @@ class Jowett(penMed):
             'b/d':[0.1,0.64]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def SetParam(self,b,d,Lsh):
         global ratio,omg
         if Lsh/d<=12:
@@ -832,6 +854,7 @@ class WenJones(penMed):
             'b/d':[0.4,1.6]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         b=data['b']['mean']
         d=data['d']['mean']
@@ -906,6 +929,7 @@ class AlyLi(penMed):
             'b/d':[0.1,0.64]
         }
         super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
     def Validation(self,data):
         global v_Lsh,v_d,v_b
         v_b=data['b']['mean']
