@@ -284,12 +284,14 @@ class GeneralTreat(LSFM):
     """
     def __init__(self,g,var,dist,muX,sigmmaX):
         n=len(var)
-        self.g=g
-        self.var=var
+        #self.g=g
+        #self.var=var
+        gg=GeneralG(g,var)
+        super().DefineG(gg)
         super().__init__(n,muX,sigmmaX,dist)
     def calc(self):
-        gg=GeneralG(self.g,self.var)
-        super().DefineG(gg)
+        #gg=GeneralG(self.g,self.var)
+        #super().DefineG(gg)
         super().RF()
 def reliability(g='r-s',var=['r','s'],dist=['normal','normal'],muX=[200,100],sigmmaX=[10,20]):
     """
