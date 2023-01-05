@@ -387,7 +387,7 @@ class RelBase:
         目的:dataについてg値の計算を行う
         """
         xx=[data[w]['mean'] for w in self.GetVariable()]
-        return super().Geval(xx)
+        return self.Geval(xx) #super() removed
     def SaveVariable(self,aa):
         """
         目的:確率変数の保存
