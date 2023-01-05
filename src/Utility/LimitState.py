@@ -381,6 +381,21 @@ class RelBase:
         return self.variable
     def GetTitle(self):
         return self.title
+    ### 2023.1.5 Penetrationより移動
+    def Gcheck(self,data):
+        """
+        目的:dataについてg値の計算を行う
+        """
+        xx=[data[w]['mean'] for w in self.GetVariable()]
+        return super().Geval(xx)
+    def SaveVariable(self,aa):
+        """
+        目的:確率変数の保存
+        """
+        self.Variable=aa
+    def GetVariable(self):
+        return self.Variable
+    ###
 from math import exp,log,sqrt
 class GMetalLoss(Lbase):
     """

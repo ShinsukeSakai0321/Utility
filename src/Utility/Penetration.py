@@ -49,6 +49,7 @@ class penMed(ls.RelBase):
             for ii in range(len(super().GetVar())):
                 ZZ[ii+2].append(zAlpha[ii])
         return X,Y,ZZ
+    """
     def Gcheck(self,data):
         """
         目的:dataについてg値の計算を行う
@@ -62,6 +63,7 @@ class penMed(ls.RelBase):
         self.Variable=aa
     def GetVariable(self):
         return self.Variable
+    """
     def SaveRange(self,aa):
         """
         目的:適用範囲データの保存
