@@ -854,7 +854,7 @@ class WenJones(penMed):
         m=data['m']['mean']
         Sy=data['Sy']['mean']
         Lsh=data['Lsh']['mean']
-        vbl=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))
+        vbl=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**0.21))
         super().check('vbl',vbl)
         super().check('Su',Su)
         super().check('Lsh/d',Lsh/d)
@@ -866,7 +866,7 @@ class WenJones(penMed):
             self.n=n
             super().__init__(self.n)
             b,d,m,Sy,Lsh,v=symbols('b d m Sy Lsh v')
-            g=2*d*sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**1.21))-v
+            g=2*d*sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**0.21))-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
             self.d1=str(diff(g,d))
