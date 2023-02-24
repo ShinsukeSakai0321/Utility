@@ -756,7 +756,8 @@ class Jowett(penMed):
         if Lsh/d<=12:
             omg=(Lsh/d)**0.305
         else:
-            omg=12.0
+            #omg=12.0
+            omg=2.14
         ratio=b/d       
     def Validation(self,data):
         global ratio,omg
@@ -769,7 +770,8 @@ class Jowett(penMed):
         if Lsh/d<=12:
             omg=(Lsh/d)**0.305
         else:
-            omg=12.0
+            #omg=12.0
+            omg=2.14
         vbl=0
         if b/d>0.1 and b/d <0.25:
             vbl=1.62*omg*d*np.sqrt(Su*d/m)*(b/d)**0.87
