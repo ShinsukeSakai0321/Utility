@@ -686,7 +686,7 @@ class Neilson(penMed):
     def SetNose(self,Lsh,d,n_shape):
         global a12
         if n_shape=='flat':
-            if Lsh/d > 4.0 & Lsh/d<22.0:
+            if Lsh/d > 4.0 and Lsh/d<22.0:
                 a12=1.67
             if Lsh/d >=22.0:
                 a12=4.26
