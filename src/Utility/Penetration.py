@@ -658,6 +658,9 @@ class Neilson(penMed):
     v   velocity of impactor
     ***constants***
     Limp   length of impactor
+    *** 注意 ***
+    SetNose(Lsh,d,n_shape)で寸法、ノーズ形状指定のこと
+    n_shape: 'flat' or 'hemispherical'
     """
     def __init__(self):
         self.variable=['b','d','m','Su','Lsh','v']
@@ -678,15 +681,25 @@ class Neilson(penMed):
         Lsh=data['Lsh']['mean']
         Limp=data['Limp']['mean']
         super().check('b/d',b/d)
-        super().check('Lsh/d',Lsh/d)
+        #super().check('Lsh/d',Lsh/d)
         super().check('Limp/d',Limp/d)
+    def SetNose(self,Lsh,d,n_shape):
+        global a12
+        if n_shape=='flat':
+            if Lsh/d > 4.0 & Lsh/d<22.0:
+                a12=1.67
+            if Lsh/d >=22.0:
+                a12=4.26
+        if n_shape=='hemispherical':
+            a12=4.24
     class G(ls.Lbase):
         def __init__(self,n):
+            global a12
             global a10,Limp
             self.n=n
             super().__init__(self.n)
             b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
-            a12=1.67
+            #a12=1.67
             g=a12*d*sqrt(Su*d/m)*(b/d)**0.85*(Lsh/d)**0.3-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
