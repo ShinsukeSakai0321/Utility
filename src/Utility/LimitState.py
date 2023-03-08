@@ -513,7 +513,7 @@ class LHSbase:
         return self.stdvs
     def gMean(self):
         num=self.nv
-        val=np.zeros((num,2))
+        val=np.zeros((1,num))
         for i in range(num):
             val[0,i]=self.means[i]
         return self.g(val)[0]
