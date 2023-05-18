@@ -867,7 +867,7 @@ class WenJones(penMed):
         b=data['b']['mean']
         d=data['d']['mean']
         m=data['m']['mean']
-        Sy=data['Sy']['mean']
+        Su=data['Su']['mean']
         Lsh=data['Lsh']['mean']
         vbl=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**0.21))
         super().check('vbl',vbl)
