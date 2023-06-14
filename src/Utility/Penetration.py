@@ -1004,3 +1004,180 @@ class AlyLi(penMed):
             dGdX[4] =eval(self.d4)
             dGdX[5] =eval(self.d5)
             super().SetdGdX(dGdX)
+################################
+#             AlyLi_M         #
+################################
+class AlyLi_M(penMed):
+    """
+    Aly and Li Formulas (2008)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Su  ultimate tensile strength of shield material
+    Lsh unsupported shield panel span
+    v   velocity of impactor
+    ---
+    注意:解析前に必ずValidation(data)を実行すること
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Su','Lsh','v']
+        self.title='Aly and Li Formulas'
+        val_range={
+            'b/d':[0.1,0.64]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        global v_Lsh,v_d,v_b
+        v_b=data['b']['mean']
+        v_d=data['d']['mean']
+        v_Lsh=data['Lsh']['mean']
+        super().check('b/d',v_b/v_d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global v_Lsh,v_d,v_b
+            self.n=n
+            super().__init__(self.n)
+
+        def gcalc(self):
+            global v_Lsh,v_d,v_b
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            if v_Lsh/v_d <=12:
+                if v_b/v_d > 0.1 and v_b/v_d<0.25:
+                    vbl=1.79*d*np.sqrt(Su*d/m)*(b/d)**0.87*(Lsh/d)**0.305
+                if v_b/v_d>=0.25 and v_b/v_d<0.64:
+                    vbl=1.72*d*np.sqrt(Su*d/m)*(b/d)**0.42*(Lsh/d)**0.35
+            if v_Lsh/v_d>12:
+                if v_b/v_d > 0.1 and v_b/v_d<0.25:
+                    vbl=3.44*d*np.sqrt(Su*d/m)*(b/d)**0.78
+                if v_b/v_d>=0.25 and v_b/v_d<0.64:
+                    vbl=1.72*d*np.sqrt(Su*d/m)*(b/d)**0.41                
+            g=vbl-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global v_Lsh,v_d,v_b
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            if v_Lsh/v_d <=12:
+                if v_b/v_d > 0.1 and v_b/v_d<0.25:
+                    dGdX[0]= 1.5573*d*(Lsh/d)**0.305*(b/d)**0.87*np.sqrt(Su*d/m)/b
+                    dGdX[1]= 0.58175*(Lsh/d)**0.305*(b/d)**0.87*np.sqrt(Su*d/m)
+                    dGdX[2]= -0.895*d*(Lsh/d)**0.305*(b/d)**0.87*np.sqrt(Su*d/m)/m
+                    dGdX[3]= 0.895*d*(Lsh/d)**0.305*(b/d)**0.87*np.sqrt(Su*d/m)/Su
+                    dGdX[4]= 0.54595*d*(Lsh/d)**0.305*(b/d)**0.87*np.sqrt(Su*d/m)/Lsh
+                    dGdX[5]= -1
+                if v_b/v_d>=0.25 and v_b/v_d<0.64:
+                    dGdX[0]= 0.7224*d*(Lsh/d)**0.35*(b/d)**0.42*np.sqrt(Su*d/m)/b
+                    dGdX[1]= 1.2556*(Lsh/d)**0.35*(b/d)**0.42*np.sqrt(Su*d/m)
+                    dGdX[2]= -0.86*d*(Lsh/d)**0.35*(b/d)**0.42*np.sqrt(Su*d/m)/m
+                    dGdX[3]= 0.86*d*(Lsh/d)**0.35*(b/d)**0.42*np.sqrt(Su*d/m)/Su
+                    dGdX[4]= 0.602*d*(Lsh/d)**0.35*(b/d)**0.42*np.sqrt(Su*d/m)/Lsh
+                    dGdX[5]= -1
+            if v_Lsh/v_d>12:
+                if v_b/v_d > 0.1 and v_b/v_d<0.25:
+                    dGdX[0]= 2.6832*d*(b/d)**0.78*np.qrt(Su*d/m)/b
+                    dGdX[1]= 2.4768*(b/d)**0.78*np.sqrt(Su*d/m)
+                    dGdX[2]= -1.72*d*(b/d)**0.78*np.sqrt(Su*d/m)/m
+                    dGdX[3]= 1.72*d*(b/d)**0.78*np.sqrt(Su*d/m)/Su
+                    dGdX[4]= 0
+                    dGdX[5]= -1
+                if v_b/v_d>=0.25 and v_b/v_d<0.64:
+                    dGdX[0]= 0.7052*d*(b/d)**0.41*np.sqrt(Su*d/m)/b
+                    dGdX[1]= 1.8748*(b/d)**0.41*np.sqrt(Su*d/m)
+                    dGdX[2]= -0.86*d*(b/d)**0.41*np.sqrt(Su*d/m)/m
+                    dGdX[3]= 0.86*d*(b/d)**0.41*np.sqrt(Su*d/m)/Su
+                    dGdX[4]= 0
+                    dGdX[5]= -1  
+            super().SetdGdX(dGdX)
+################################
+#             THOR_M             #
+################################
+class THOR_M(penMed):
+    """
+    THOR equation (Crull and Swisdak, 2005)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   velocity of impactor
+    th  angle between a normal vector to a shield surface and the direction of impactor
+    """
+    C1=0
+    a1=0
+    b1=0
+    g1=0
+    def __init__(self):
+        self.variable=['b','d','m','v','th']
+        self.title='THOR Equations'
+        self.tab={"Magnesium":{"C1":6.349,"a1":1.004,"b1":-1.076,"g1":0.966},
+             "Aluminum":{"C1":6.185,"a1":0.903,"b1":-0.941,"g1":1.098},
+             "CastIron":{"C1":10.153,"a1":2.186,"b1":-2.204,"g1":2.156},
+             "Titanium":{"C1":7.552,"a1":1.325,"b1":-1.314,"g1":1.643},
+             "FaceSteel":{"C1":7.694,"a1":1.191,"b1":-1.397,"g1":1.747}, 
+             "MildSteel":{"C1":6.523,"a1":0.906,"b1":-0.963,"g1":1.286}, 
+             "HardSteel":{"C1":6.601,"a1":0.906,"b1":-0.963,"g1":1.286},
+             "Copper":{"C1":14.065,"a1":3.476,"b1":-3.687,"g1":4.27},
+             "Lead":{"C1":10.955,"a1":2.735,"b1":-2.753,"g1":3.59}
+            }
+        super().SaveRange('Validation process is not defined.')
+        super().SaveVariable(self.variable)
+    def MatList(self):
+        """
+        目的:登録されている材料名リストを返す
+        """
+        return list(self.tab.keys())
+    def setMaterial(self,mat):
+        """
+        目的:材料の設定
+           mat: "Magnesium","Aluminum","CastIron","Titanium","FaceSteel","MildSteel","HardSteel","Copper","Lead"
+        """
+        global C1,a1,b1,g1
+        C1=self.tab[mat]["C1"]
+        a1=self.tab[mat]["a1"]
+        b1=self.tab[mat]["b1"]
+        g1=self.tab[mat]["g1"]
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global C1,a1,b1,g1
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            global C1,a1,b1,g1
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            th=X[4]
+            A=np.pi*d*d/4
+            g=0.3048*10**C1*(61024*b*A)**a1*(15432.4*m)**b1*(1/np.cos(th))**g1-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global C1,a1,b1,g1
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            th=X[4]
+            dGdX[0]=0.3048*10**C1*a1*(15432.4*m)**b1*(47928.1375231659*b*d**2)**a1*(1/np.cos(th))**g1/b
+            dGdX[1] =0.6096*10**C1*a1*(15432.4*m)**b1*(47928.1375231659*b*d**2)**a1*(1/np.cos(th))**g1/d
+            dGdX[2] =0.3048*10**C1*b1*(15432.4*m)**b1*(47928.1375231659*b*d**2)**a1*(1/np.cos(th))**g1/m
+            dGdX[3] =-1
+            dGdX[4] =0.3048*10**C1*g1*(15432.4*m)**b1*(47928.1375231659*b*d**2)**a1*(1/np.cos(th))**g1*np.sin(th)/np.cos(th)
+            super().SetdGdX(dGdX)
