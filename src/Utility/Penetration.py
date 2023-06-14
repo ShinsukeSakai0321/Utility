@@ -140,6 +140,7 @@ class BRL(penMed):
             super().__init__(self.n)
             b,d,m,v=symbols('b d m v')
             a7=5.37
+            var('a7')
             g=a7*1e4*(b*d)**0.75/m**0.5-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
@@ -283,6 +284,7 @@ class THOR(penMed):
             super().__init__(self.n)
             b,d,m,v,th=symbols('b d m v th')
             A=np.pi*d*d/4
+            var('A C1 a1 b1 g1')
             g=0.3048*10**C1*(61024*b*A)**a1*(15432.4*m)**b1*(1/cos(th))**g1-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
@@ -431,6 +433,7 @@ class SRI(penMed):
             super().__init__(self.n)
             b,d,m,v,Su,Lsh=symbols('b d m v Su Lsh')
             a6=0.4
+            var('a6')
             g=a6*b*sqrt(Su*d/m*(42.7+Lsh/b))-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
@@ -518,6 +521,7 @@ class SwRI(penMed):
             self.n=n
             super().__init__(self.n)
             b,m,v,th=symbols('b m v th')
+            var('S b1 b2 b3')
             g=0.205*b1/np.sqrt(m)*S**b2*(39.37*b/cos(th))**b3-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
@@ -608,6 +612,7 @@ class Lambert(penMed):
             b,d,m,th,v,Limp=symbols('b d m th v Limp')
             z=(b/d)*(1/cos(th))**0.75
             f=z+exp(z)-1
+            var('a10')
             g=31.62*a10*(Limp/d)**0.15*sqrt(f*d**3/m)-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
@@ -700,6 +705,7 @@ class Neilson(penMed):
             super().__init__(self.n)
             b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
             #a12=1.67
+            var('a12')
             g=a12*d*sqrt(Su*d/m)*(b/d)**0.85*(Lsh/d)**0.3-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
@@ -802,6 +808,7 @@ class Jowett(penMed):
             super().__init__(self.n)
             b,d,m,Su,v=symbols('b d m Su v')
             vbl=0
+            var('ratio omg')
             if ratio>0.1 and ratio <0.25:
                 vbl=1.62*omg*d*sqrt(Su*d/m)*(b/d)**0.87
             if ratio>=0.25 and ratio<0.64:
@@ -952,6 +959,7 @@ class AlyLi(penMed):
             super().__init__(self.n)
             b,d,m,Su,Lsh,v=symbols('b d m Su Lsh v')
             vbl=0
+            var('v_Lsh v_d v_b')
             if v_Lsh/v_d <=12:
                 if v_b/v_d > 0.1 and v_b/v_d<0.25:
                     vbl=1.79*d*sqrt(Su*d/m)*(b/d)**0.87*(Lsh/d)**0.305
