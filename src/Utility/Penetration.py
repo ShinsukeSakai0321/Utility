@@ -1181,3 +1181,541 @@ class THOR_M(penMed):
             dGdX[3] =-1
             dGdX[4] =0.3048*10**C1*g1*(15432.4*m)**b1*(47928.1375231659*b*d**2)**a1*(1/np.cos(th))**g1*np.sin(th)/np.cos(th)
             super().SetdGdX(dGdX)
+################################
+#             BRL_M            #
+################################
+class BRL_M(penMed):
+    """
+    Ballistic Research Laboratories (BRL) model (1968)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   velocity of impactor
+    ***constants***
+    Limp    length of impactor
+    Lsh     unsupported shield panel span
+    Su      ultimate tensile strength of shield material
+    """
+    def __init__(self):
+        self.variable=['b','d','m','v']
+        self.title='BRL Formula'
+        val_range={
+            'v_bl':[57,270],
+            'Limp/d':[1.25,8],
+            'b/d':[0.1,1.0],
+            'Lsh/d':[8,35],
+            'Su':[315,500]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Limp=data['Limp']['mean']
+        Lsh=data['Lsh']['mean']
+        Su=data['Su']['mean']
+        a7=5.37
+        v_bl=a7*1e4*(b*d)**0.75/m**0.5
+        super().check('v_bl',v_bl)
+        super().check('Limp/d',Limp/d)
+        super().check('b/d',b/d)
+        super().check('Lsh/d',Lsh/d)
+        super().check('Su',Su)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            a7=5.37
+            g=a7*1e4*(b*d)**0.75/m**0.5-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            a7=5.37
+            dGdX[0]= 7500.0*a7*(b*d)**0.75/(b*m**0.5)
+            dGdX[1]= 7500.0*a7*(b*d)**0.75/(d*m**0.5)
+            dGdX[2]= -5000.0*a7*(b*d)**0.75/m**1.5
+            dGdX[3] =-1
+            super().SetdGdX(dGdX)
+################################
+#             DeMarre_M        #
+################################
+class DeMarre_M(penMed):
+    """
+    De Marre formula (Herrmann and Jones,1961)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   velocity of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','v']
+        self.title='De Marre Formula'
+        val_range={
+            'v_bl':[200,900],
+            'm':[0.1,50]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        v_bl=0.4311e5*d**0.75*b**0.7/m**0.5
+        super().check('v_bl',v_bl)
+        super().check('m',m)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            self.n=n
+            super().__init__(self.n)
+
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            g=0.431e5*d**0.75*b**0.7/m**0.5-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            dGdX[0]=30170.0*d**0.75/(b**0.3*m**0.5)
+            dGdX[1] =32325.0*b**0.7/(d**0.25*m**0.5)
+            dGdX[2] =-21550.0*b**0.7*d**0.75/m**1.5
+            dGdX[3] =-1
+            super().SetdGdX(dGdX)
+################################
+#             Jowett_M         #
+################################
+class Jowett_M(penMed):
+    """
+    Jowett Formula (1986)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Su  ultimate tensile strength of shield material
+    v   velocity of impactor
+    ***constants***
+    Lsh unsupported shield panel span
+    Limp   length of impactor
+    ***method***
+    SetParam(b,d,Lsh)  g計算のためのparameter設定
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Su','v']
+        self.title='Jowett Formula'
+        val_range={
+            'vbl':[40,200],
+            'Su':[315,483],
+            'Limp/d':[2,8],
+            'b/d':[0.1,0.64]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def SetParam(self,b,d,Lsh):
+        global ratio,omg
+        if Lsh/d<=12:
+            omg=(Lsh/d)**0.305
+        else:
+            #omg=12.0
+            omg=2.14
+        ratio=b/d       
+    def Validation(self,data):
+        global ratio,omg
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        Limp=data['Limp']['mean']
+        if Lsh/d<=12:
+            omg=(Lsh/d)**0.305
+        else:
+            #omg=12.0
+            omg=2.14
+        vbl=0
+        if b/d>0.1 and b/d <0.25:
+            vbl=1.62*omg*d*np.sqrt(Su*d/m)*(b/d)**0.87
+        if b/d>=0.25 and b/d<0.64:
+            vbl=0.87*omg*d*np.sqrt(Su*d/m)*(b/d)**0.42
+        ratio=b/d
+        super().check('vbl',vbl)
+        super().check('Su',Su)
+        super().check('Limp/d',Limp/d)
+        super().check('b/d',b/d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global ratio,omg
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            global ratio,omg
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            v=X[4]
+            if ratio>0.1 and ratio <0.25:
+                vbl=1.62*omg*d*np.sqrt(Su*d/m)*(b/d)**0.87
+            if ratio>=0.25 and ratio<0.64:
+                vbl=0.87*omg*d*np.sqrt(Su*d/m)*(b/d)**0.42
+            g=vbl-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global ratio,omg
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            v=X[4]
+            if ratio>0.1 and ratio <0.25:
+                dGdX[0]= 1.4094*d*omg*(b/d)**0.87*np.sqrt(Su*d/m)/b
+                dGdX[1]= 1.0206*omg*(b/d)**0.87*np.sqrt(Su*d/m)
+                dGdX[2]= -0.81*d*omg*(b/d)**0.87*np.sqrt(Su*d/m)/m
+                dGdX[3]= 0.81*d*omg*(b/d)**0.87*np.sqrt(Su*d/m)/Su
+                dGdX[4]= -1
+            if ratio>=0.25 and ratio<0.64:
+                dGdX[0]= 0.3654*d*omg*(b/d)**0.42*np.sqrt(Su*d/m)/b
+                dGdX[1]= 0.9396*omg*(b/d)**0.42*np.sqrt(Su*d/m)
+                dGdX[2]= -0.435*d*omg*(b/d)**0.42*np.sqrt(Su*d/m)/m
+                dGdX[3]= 0.435*d*omg*(b/d)**0.42*np.sqrt(Su*d/m)/Su
+                dGdX[4]= -1
+            super().SetdGdX(dGdX)
+################################
+#             Lambert_M        #
+################################
+class Lambert_M(penMed):
+    """
+    Lambert and Jonas Approximation (1976)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    th  angle between a normal vector to a shield surface and the direction of impact
+    v   velocity of impactor
+    Limp    length of impactor
+    ***constants***   
+    ro_imp  material density of impactor
+    a10     1750 for aluminum and 4000 for rolled homogeneous armor(RHA)
+    *** 注意 ***
+    SetMaterial(mat)で材料指定のこと
+    mat: 'aluminum' or 'RHA'
+          RHA:rolled homogeneous armor
+    """
+    a10=0
+    def __init__(self):
+        self.variable=['b','d','m','th','v','Limp']
+        self.title='Lambert and Jonas Approximation'
+        val_range={
+            'm':[0.0005,3.63],
+            'd':[0.002,0.05],
+            'Limp/d':[4,30],
+            'b':[0.006,0.15],
+            'th':[0,60/360],
+            'ro_imp':[7800,19000]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        global a10
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        th=data['th']['mean']
+        Limp=data['Limp']['mean']
+        ro_imp=data['ro_imp']['mean']
+        super().check('b',b)
+        super().check('d',d)
+        super().check('m',m)
+        super().check('th',th)
+        super().check('Limp/d',Limp/d)
+        super().check('ro_imp',ro_imp)
+    def SetMaterial(self,mat):
+        global a10
+        if mat=='aluminum':
+            a10=1750
+        if mat=='RHA':
+            a10=4000
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global a10
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            global a10
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            th=X[3]
+            v=X[4]
+            Limp=X[5]
+            z=(b/d)*(1/np.cos(th))**0.75
+            f=z+np.exp(z)-1
+            g=31.62*a10*(Limp/d)**0.15*np.sqrt(f*d**3/m)-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global a10
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            th=X[3]
+            v=X[4]
+            Limp=X[5]
+            dGdX[0]= 15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/cos(th))**0.75/d) - 1)/m)*((1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)/d + (1/np.cos(th))**0.75/d)/(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)
+            dGdX[1]= -4.743*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)/d + 31.62*a10*m*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)*(d**3*(-b*(1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)/d**2 - b*(1/np.cos(th))**0.75/d**2)/(2*m) + 3*d**2*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/(2*m))/(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1))
+            dGdX[2]= -15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)/m
+            dGdX[3]= 15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)*(0.75*b*(1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)*np.sin(th)/(d*np.cos(th)) + 0.75*b*(1/np.cos(th))**0.75*np.sin(th)/(d*np.cos(th)))/(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)
+            dGdX[4]= -1
+            dGdX[5]= 4.743*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)/Limp
+            super().SetdGdX(dGdX)
+################################
+#             Neilson_M        #
+################################
+class Neilson_M(penMed):
+    """
+    Neilson Formula (1985)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Su  ultimate tensile strength of shield material
+    Lsh unsupported shield panel span
+    v   velocity of impactor
+    ***constants***
+    Limp   length of impactor
+    *** 注意 ***
+    SetNose(Lsh,d,n_shape)で寸法、ノーズ形状指定のこと
+    n_shape: 'flat' or 'hemispherical'
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Su','Lsh','v']
+        self.title='Nelson Formula'
+        val_range={
+            'b/d':[0.14,0.64],
+            'Lsh/d':[4,22],
+            'Limp/d':[13,1e4],
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        global a10,Limp
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        Limp=data['Limp']['mean']
+        super().check('b/d',b/d)
+        #super().check('Lsh/d',Lsh/d)
+        super().check('Limp/d',Limp/d)
+    def SetNose(self,Lsh,d,n_shape):
+        global a12
+        if n_shape=='flat':
+            if Lsh/d > 4.0 and Lsh/d<22.0:
+                a12=1.67
+            if Lsh/d >=22.0:
+                a12=4.26
+        if n_shape=='hemispherical':
+            a12=4.24
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global a12
+            global a10,Limp
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            global a12
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            g=a12*d*np.sqrt(Su*d/m)*(b/d)**0.85*(Lsh/d)**0.3-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global a12
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Su=X[3]
+            Lsh=X[4]
+            v=X[5]
+            dGdX[0]= 0.85*a12*d*(Lsh/d)**0.3*(b/d)**0.85*np.sqrt(Su*d/m)/b
+            dGdX[1]= 0.35*a12*(Lsh/d)**0.3*(b/d)**0.85*np.sqrt(Su*d/m)
+            dGdX[2]= -a12*d*(Lsh/d)**0.3*(b/d)**0.85*np.sqrt(Su*d/m)/(2*m)
+            dGdX[3]= a12*d*(Lsh/d)**0.3*(b/d)**0.85*np.sqrt(Su*d/m)/(2*Su)
+            dGdX[4]= 0.3*a12*d*(Lsh/d)**0.3*(b/d)**0.85*np.sqrt(Su*d/m)/Lsh
+            dGdX[5]= -1
+            super().SetdGdX(dGdX)
+################################
+#             Ohte_M           #
+################################
+class Ohte_M(penMed):
+    """
+    Ohte et al. Formula (Ohte et al., 1982)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   velocity of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','v']
+        self.title='Ohte et al. Formula'
+        val_range={
+            'v_bl':[25,180],
+            'm':[3,50],
+            'Su':[490,637],
+            'b':[7,38],
+            'Lsh/b':[39,1e4],
+            'd':[39,1e4]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        v_bl=7.67e4*(b*d)**0.75/m**0.5
+        super().check('v_bl',v_bl)
+        super().check('m',m)
+        super().check('Su',Su)
+        super().check('b',b)
+        super().check('Lsh/b',Lsh/b)
+        super().check('d',d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            g=7.67e4*(b*d)**0.75/m**0.5-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            dGdX[0]= 57525.0*(b*d)**0.75/(b*m**0.5)
+            dGdX[1]= 57525.0*(b*d)**0.75/(d*m**0.5)
+            dGdX[2]= -38350.0*(b*d)**0.75/m**1.5
+            dGdX[5]= -1
+            super().SetdGdX(dGdX)
+################################
+#             SRI_M            #
+################################
+class SRI_M(penMed):
+    """
+    Stanford Research Institute (SRI) correlation (1963)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    v   velocity of impactor
+    Lsh unsupported shield panel span
+    Su  ultimate tensile strength of shield material
+    Limp    length of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','v','Lsh','Su']
+        self.title='Ohte et al. Formula'
+        val_range={
+            'v_bl':[21,122],
+            'b/d':[0.1,0.6],
+            'Lsh/d':[5,8],
+            'b/Lsh':[0.002,0.05],
+            'Lsh/b':[0.0,100],
+            'Limp/d':[5,8]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        Limp=data['Limp']['mean']
+        a6=0.44
+        v_bl=a6*b*np.sqrt(Su*d/m*(42.7+Lsh/b))
+        super().check('v_bl',v_bl)
+        super().check('b/d',b/d)
+        super().check('Lsh/d',Lsh/d)
+        super().check('b/Lsh',b/Lsh)
+        super().check('Lsh/b',Lsh/b)
+        super().check('Limp/d',Limp/d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global a6
+            self.n=n
+            super().__init__(self.n)
+            a6=0.4
+        def gcalc(self):
+            global a6
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            Su=X[4]
+            Lsh=X[5]
+            g=a6*b*np.sqrt(Su*d/m*(42.7+Lsh/b))-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global a6
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            v=X[3]
+            Su=X[4]
+            Lsh=X[5]
+            dGdX[0]= -Lsh*a6*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*b*(Lsh/b + 42.7)) + a6*np.sqrt(Su*d*(Lsh/b + 42.7)/m)
+            dGdX[1]= a6*b*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*d)
+            dGdX[2]= -a6*b*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*m)
+            dGdX[3]= -1
+            dGdX[4]= a6*b*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*Su)
+            dGdX[5]= a6*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*(Lsh/b + 42.7))
+            super().SetdGdX(dGdX)
