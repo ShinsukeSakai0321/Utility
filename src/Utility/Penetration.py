@@ -1377,6 +1377,7 @@ class Jowett_M(penMed):
             m=X[2]
             Su=X[3]
             v=X[4]
+            ratio=b/d
             vbl=0
             if ratio>0.1 and ratio <0.25:
                 vbl=1.62*omg*d*np.sqrt(Su*d/m)*(b/d)**0.87
@@ -1393,6 +1394,7 @@ class Jowett_M(penMed):
             m=X[2]
             Su=X[3]
             v=X[4]
+            ratio=b/d
             if ratio>0.1 and ratio <0.25:
                 dGdX[0]= 1.4094*d*omg*(b/d)**0.87*np.sqrt(Su*d/m)/b
                 dGdX[1]= 1.0206*omg*(b/d)**0.87*np.sqrt(Su*d/m)
