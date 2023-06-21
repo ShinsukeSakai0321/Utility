@@ -522,7 +522,7 @@ class SwRI(penMed):
             super().__init__(self.n)
             b,m,v,th=symbols('b m v th')
             var('S b1 b2 b3')
-            g=0.205*b1/np.sqrt(m)*S**b2*(39.37*b/cos(th))**b3-v
+            g=0.205*b1/sqrt(m)*S**b2*(39.37*b/cos(th))**b3-v
             self.gg=str(g)
             self.d0=str(diff(g,b))
             self.d1=str(diff(g,m))
@@ -1718,4 +1718,149 @@ class SRI_M(penMed):
             dGdX[3]= -1
             dGdX[4]= a6*b*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*Su)
             dGdX[5]= a6*np.sqrt(Su*d*(Lsh/b + 42.7)/m)/(2*(Lsh/b + 42.7))
+            super().SetdGdX(dGdX)
+################################
+#             SwRI_M           #
+################################
+class SwRI_M(penMed):
+    """
+    Southwest Research Institute (SwRI) model (Baker et al., 1980)
+    ---
+    b   thickness of a shield
+    m   initial mass of the impactor
+    v   velocity of impactor
+    th  angle between a normal vector to a shield surface and the direction of impactor
+    fragment  :'Standard' or 'Alternative'
+    """
+    S=0
+    b1=0
+    b2=0
+    b3=0
+    def __init__(self):
+        self.variable=['b','m','v','th']
+        self.title='Southwest Research Institute (SwRI) model'
+        super().SaveRange('Validation process is not defined.')
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        global S,b1,b2,b3
+        tab={"0":{"b1":1414,"b2":0.295,"b3":0.910},
+        "1":{"b1":1936,"b2":0.096,"b3":1.310},
+        "2":{"b1":2039,"b2":0.064,"b3":0.430}}
+        m=data['m']['mean']
+        b=data['b']['mean']
+        v=data['v']['mean']
+        th=data['th']['mean']
+        if data['fragment'] == 'Standard':
+            k=0.186
+        else:
+            k=0.34
+        S=1.33*(m/k)**(2/3)
+        z=b/np.sqrt(S)
+        if z>0 and z<=0.46:
+            a="0"
+        if z>0.46 and z<=1.06:
+            a="1"
+        if z>1.06:
+            a="2"
+        b1=tab[a]["b1"]
+        b2=tab[a]["b2"]
+        b3=tab[a]["b3"]
+        print('Validation process is not defined.')
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global S,b1,b2,b3
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            global S,b1,b2,b3
+            X=super().GetX()
+            b=X[0]
+            m=X[1]
+            v=X[2]
+            th=X[3]
+            g=0.205*b1/np.sqrt(m)*S**b2*(39.37*b/cos(th))**b3-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global S,b1,b2,b3
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            m=X[1]
+            v=X[2]
+            th=X[3]
+            dGdX[0]= 0.205*S**b2*b1*b3*(39.37*b/np.cos(th))**b3/(b*np.sqrt(m))
+            dGdX[1]= -0.1025*S**b2*b1*(39.37*b/np.cos(th))**b3/m**(3/2)
+            dGdX[2]= -1
+            dGdX[3]= 0.205*S**b2*b1*b3*(39.37*b/np.cos(th))**b3*np.sin(th)/(sqrt(m)*np.cos(th))
+            super().SetdGdX(dGdX)
+################################
+#             WenJones_M       #
+################################
+class WenJones_M(penMed):
+    """
+    Wen and Jones Formula (1992)
+    ---
+    ***variables***
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    m   initial mass of the impactor
+    Sy  yield stress of shield material
+    Lsh unsupported shield panel span
+    v   velocity of impactor
+    """
+    def __init__(self):
+        self.variable=['b','d','m','Sy','Lsh','v']
+        self.title='Jowett Formula'
+        val_range={
+            'vbl':[0,20],
+            'Su':[340,440],
+            'Lsh/d':[40,40],
+            'Lsh/b':[25,100],
+            'b/d':[0.4,1.6]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def Validation(self,data):
+        b=data['b']['mean']
+        d=data['d']['mean']
+        m=data['m']['mean']
+        Sy=data['Sy']['mean']
+        Su=data['Su']['mean']
+        Lsh=data['Lsh']['mean']
+        vbl=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**0.21))
+        super().check('vbl',vbl)
+        super().check('Su',Su)
+        super().check('Lsh/d',Lsh/d)
+        super().check('Lsh/b',Lsh/b)
+        super().check('b/d',b/d)
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global ratio,omg
+            self.n=n
+            super().__init__(self.n)
+        def gcalc(self):
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Sy=X[3]
+            Lsh=X[4]
+            v=X[5]
+            g=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**0.21))-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            m=X[2]
+            Sy=X[3]
+            Lsh=X[4]
+            v=X[5]
+            dGdX[0]= d*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)*(1.5707963267949*b/d**2 + 1.47*(Lsh/d)**0.21*(b/d)**1.47/b)/(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)
+            dGdX[1]= 2*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m) + 2*m*sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)*(Sy*d*(-1.5707963267949*b**2/d**3 - 1.68*(Lsh/d)**0.21*(b/d)**1.47/d)/(2*m) + Sy*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/(2*m))/(Sy*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47))
+            dGdX[2]= -d*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)/m
+            dGdX[3]= d*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)/Sy
+            dGdX[4]= 0.21*d*(Lsh/d)**0.21*(b/d)**1.47*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)/(Lsh*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47))
+            dGdX[5]= -1
             super().SetdGdX(dGdX)
