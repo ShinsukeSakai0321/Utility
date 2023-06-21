@@ -1545,6 +1545,7 @@ class Neilson_M(penMed):
                 a12=1.67
             if Lsh/d >=22.0:
                 a12=4.26
+        a12=1.67 #上の条件を無視
         if n_shape=='hemispherical':
             a12=4.24
     class G(ls.Lbase):
