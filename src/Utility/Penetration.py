@@ -1,6 +1,19 @@
 from Utility import LimitState as ls
 from sympy import *
 import numpy as np
+########################
+#開発経過
+#1. 貫通公式を管理するクラスについて二種類のものが存在する
+#   例えば、BRLクラスとともにBRL_Mと、最後に_Mが付されたものが
+#   存在する。この違いは、前者が、gの微分を数式処理で行うのに対して、
+#   後者は、微分後の式を陽に記述している。なるべく、後者を使うことが
+#   望ましい。計算速度が早いことと、場合によっては、処理途中で不具合
+#   を発生する可能性があるからである。
+#2. 公式管理クラスのコンストラクタ内で、self.constの文字列リストを定義
+#   することをルール化した(2013.7.26)。この内容は、確率変数ではないが、
+#   適用範囲チェックに使ったり、定数設定に使うなどの文字列リストを意味する。
+#   処理過程で必要になるケースがある。
+########################
 class penMed(ls.RelBase):
     """
     目的:貫通評価クラスが継承する直前のクラス
@@ -110,6 +123,7 @@ class BRL(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v']
+        self.const=['Limp','Lsh','Su']#適用範囲チェック用の定数
         self.title='BRL Formula'
         val_range={
             'v_bl':[57,270],
@@ -183,6 +197,7 @@ class DeMarre(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v']
+        self.const=[]
         self.title='De Marre Formula'
         val_range={
             'v_bl':[200,900],
@@ -249,6 +264,7 @@ class THOR(penMed):
     g1=0
     def __init__(self):
         self.variable=['b','d','m','v','th']
+        self.const=[]
         self.title='THOR Equations'
         self.tab={"Magnesium":{"C1":6.349,"a1":1.004,"b1":-1.076,"g1":0.966},
              "Aluminum":{"C1":6.185,"a1":0.903,"b1":-0.941,"g1":1.098},
@@ -329,6 +345,7 @@ class Ohte(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v']
+        self.const=['Lsh','Su']
         self.title='Ohte et al. Formula'
         val_range={
             'v_bl':[25,180],
@@ -401,6 +418,7 @@ class SRI(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v','Lsh','Su']
+        self.const=['Limp']
         self.title='Ohte et al. Formula'
         val_range={
             'v_bl':[21,122],
@@ -573,6 +591,7 @@ class Lambert(penMed):
     a10=0
     def __init__(self):
         self.variable=['b','d','m','th','v','Limp']
+        self.const=['ro_imp']
         self.title='Lambert and Jonas Approximation'
         val_range={
             'm':[0.0005,3.63],
@@ -669,6 +688,7 @@ class Neilson(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Su','Lsh','v']
+        self.const=['Limp']
         self.title='Nelson Formula'
         val_range={
             'b/d':[0.14,0.64],
@@ -761,6 +781,7 @@ class Jowett(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Su','v']
+        self.const=['Lsh','Limp']
         self.title='Jowett Formula'
         val_range={
             'vbl':[40,200],
@@ -860,6 +881,7 @@ class WenJones(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Sy','Lsh','v']
+        self.const=['Su']
         self.title='Jowett Formula'
         val_range={
             'vbl':[0,20],
@@ -940,6 +962,7 @@ class AlyLi(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Su','Lsh','v']
+        self.const=[]
         self.title='Aly and Li Formulas'
         val_range={
             'b/d':[0.1,0.64]
@@ -1007,6 +1030,8 @@ class AlyLi(penMed):
 ################################
 #             AlyLi_M         #
 ################################
+#  以下_Mがつくクラスでは、数式処理を使わない
+#
 class AlyLi_M(penMed):
     """
     Aly and Li Formulas (2008)
@@ -1023,6 +1048,7 @@ class AlyLi_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Su','Lsh','v']
+        self.const=[]
         self.title='Aly and Li Formulas'
         val_range={
             'b/d':[0.1,0.64]
@@ -1089,7 +1115,7 @@ class AlyLi_M(penMed):
                     dGdX[5]= -1
             if v_Lsh/v_d>12:
                 if v_b/v_d > 0.1 and v_b/v_d<0.25:
-                    dGdX[0]= 2.6832*d*(b/d)**0.78*np.qrt(Su*d/m)/b
+                    dGdX[0]= 2.6832*d*(b/d)**0.78*np.sqrt(Su*d/m)/b
                     dGdX[1]= 2.4768*(b/d)**0.78*np.sqrt(Su*d/m)
                     dGdX[2]= -1.72*d*(b/d)**0.78*np.sqrt(Su*d/m)/m
                     dGdX[3]= 1.72*d*(b/d)**0.78*np.sqrt(Su*d/m)/Su
@@ -1122,6 +1148,7 @@ class THOR_M(penMed):
     g1=0
     def __init__(self):
         self.variable=['b','d','m','v','th']
+        self.const=['Material']
         self.title='THOR Equations'
         self.tab={"Magnesium":{"C1":6.349,"a1":1.004,"b1":-1.076,"g1":0.966},
              "Aluminum":{"C1":6.185,"a1":0.903,"b1":-0.941,"g1":1.098},
@@ -1135,6 +1162,8 @@ class THOR_M(penMed):
             }
         super().SaveRange('Validation process is not defined.')
         super().SaveVariable(self.variable)
+    def Validation(self,data):
+        print('Validation process is not defined.')
     def MatList(self):
         """
         目的:登録されている材料名リストを返す
@@ -1200,6 +1229,7 @@ class BRL_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v']
+        self.const=['Limp','Lsh','Su']
         self.title='BRL Formula'
         val_range={
             'v_bl':[57,270],
@@ -1264,6 +1294,7 @@ class DeMarre_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v']
+        self.const=[]
         self.title='De Marre Formula'
         val_range={
             'v_bl':[200,900],
@@ -1324,6 +1355,7 @@ class Jowett_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Su','v']
+        self.const=['Lsh','Limp']
         self.title='Jowett Formula'
         val_range={
             'vbl':[40,200],
@@ -1433,6 +1465,7 @@ class Lambert_M(penMed):
     a10=0
     def __init__(self):
         self.variable=['b','d','m','th','v','Limp']
+        self.const=['ro_imp','Material']
         self.title='Lambert and Jonas Approximation'
         val_range={
             'm':[0.0005,3.63],
@@ -1452,13 +1485,17 @@ class Lambert_M(penMed):
         th=data['th']['mean']
         Limp=data['Limp']['mean']
         ro_imp=data['ro_imp']['mean']
+        mat=data['Material']
+        self.setMaterial(mat)
         super().check('b',b)
         super().check('d',d)
         super().check('m',m)
         super().check('th',th)
         super().check('Limp/d',Limp/d)
         super().check('ro_imp',ro_imp)
-    def SetMaterial(self,mat):
+    def MatList(self):
+        return ['aluminum','RHA']
+    def setMaterial(self,mat):
         global a10
         if mat=='aluminum':
             a10=1750
@@ -1492,7 +1529,7 @@ class Lambert_M(penMed):
             th=X[3]
             v=X[4]
             Limp=X[5]
-            dGdX[0]= 15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/cos(th))**0.75/d) - 1)/m)*((1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)/d + (1/np.cos(th))**0.75/d)/(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)
+            dGdX[0]= 15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)*((1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)/d + (1/np.cos(th))**0.75/d)/(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)
             dGdX[1]= -4.743*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)/d + 31.62*a10*m*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)*(d**3*(-b*(1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)/d**2 - b*(1/np.cos(th))**0.75/d**2)/(2*m) + 3*d**2*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/(2*m))/(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1))
             dGdX[2]= -15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)/m
             dGdX[3]= 15.81*a10*(Limp/d)**0.15*np.sqrt(d**3*(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)/m)*(0.75*b*(1/np.cos(th))**0.75*np.exp(b*(1/np.cos(th))**0.75/d)*np.sin(th)/(d*np.cos(th)) + 0.75*b*(1/np.cos(th))**0.75*np.sin(th)/(d*np.cos(th)))/(b*(1/np.cos(th))**0.75/d + np.exp(b*(1/np.cos(th))**0.75/d) - 1)
@@ -1515,12 +1552,11 @@ class Neilson_M(penMed):
     v   velocity of impactor
     ***constants***
     Limp   length of impactor
-    *** 注意 ***
-    SetNose(Lsh,d,n_shape)で寸法、ノーズ形状指定のこと
-    n_shape: 'flat' or 'hemispherical'
+    shape 'flat' or 'hemispherical' (ノーズ形状)
     """
     def __init__(self):
         self.variable=['b','d','m','Su','Lsh','v']
+        self.const=['Limp','shape']
         self.title='Nelson Formula'
         val_range={
             'b/d':[0.14,0.64],
@@ -1530,13 +1566,14 @@ class Neilson_M(penMed):
         super().SaveRange(val_range)
         super().SaveVariable(self.variable)
     def Validation(self,data):
-        global a10,Limp
         b=data['b']['mean']
         d=data['d']['mean']
         m=data['m']['mean']
         Su=data['Su']['mean']
         Lsh=data['Lsh']['mean']
         Limp=data['Limp']['mean']
+        shape=data['shape']
+        self.SetNose(Lsh,d,shape)
         super().check('b/d',b/d)
         #super().check('Lsh/d',Lsh/d)
         super().check('Limp/d',Limp/d)
@@ -1598,6 +1635,7 @@ class Ohte_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v']
+        self.const=['Lsh','Su']
         self.title='Ohte et al. Formula'
         val_range={
             'v_bl':[25,180],
@@ -1644,7 +1682,7 @@ class Ohte_M(penMed):
             dGdX[0]= 57525.0*(b*d)**0.75/(b*m**0.5)
             dGdX[1]= 57525.0*(b*d)**0.75/(d*m**0.5)
             dGdX[2]= -38350.0*(b*d)**0.75/m**1.5
-            dGdX[5]= -1
+            dGdX[3]= -1
             super().SetdGdX(dGdX)
 ################################
 #             SRI_M            #
@@ -1663,6 +1701,7 @@ class SRI_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','v','Lsh','Su']
+        self.const=['Limp']
         self.title='Ohte et al. Formula'
         val_range={
             'v_bl':[21,122],
@@ -1743,6 +1782,7 @@ class SwRI_M(penMed):
     def __init__(self):
         self.variable=['b','m','v','th']
         self.title='Southwest Research Institute (SwRI) model'
+        self.const=['fragment']
         super().SaveRange('Validation process is not defined.')
         super().SaveVariable(self.variable)
     def Validation(self,data):
@@ -1782,7 +1822,7 @@ class SwRI_M(penMed):
             m=X[1]
             v=X[2]
             th=X[3]
-            g=0.205*b1/np.sqrt(m)*S**b2*(39.37*b/cos(th))**b3-v
+            g=0.205*b1/np.sqrt(m)*S**b2*(39.37*b/np.cos(th))**b3-v
             super().SetG(g)
         def dGdXcalc(self):
             global S,b1,b2,b3
@@ -1814,6 +1854,7 @@ class WenJones_M(penMed):
     """
     def __init__(self):
         self.variable=['b','d','m','Sy','Lsh','v']
+        self.const=['Su']
         self.title='Jowett Formula'
         val_range={
             'vbl':[0,20],
