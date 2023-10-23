@@ -89,6 +89,17 @@ class penMed(ls.RelBase):
             print('**Validation of [',cond,'] satisfied**')
             return
         print('**Validation of [',cond,'] not satisfied**:',',Value=',val)
+    def check_c(self,cond,val):
+        """
+        目的:適用範囲内か否かについて、True,Falseでもどす
+        """ 
+        min_r=self.Range[cond][0]
+        max_r=self.Range[cond][1]
+        if val >= min_r and val<=max_r:
+            iflag=True
+        else:
+            iflag=False
+        return iflag       
     def GetMean(self,data):
         """
         目的:Jsonデータ　dataから、変数の平均値を取り出しリストを戻す
@@ -1053,6 +1064,7 @@ class AlyLi_M(penMed):
         val_range={
             'b/d':[0.1,0.64]
         }
+        self.i_Valid=True  #Validation結果を出力するときTrue
         super().SaveRange(val_range)
         super().SaveVariable(self.variable)
     def Validation(self,data):
@@ -1060,7 +1072,12 @@ class AlyLi_M(penMed):
         v_b=data['b']['mean']
         v_d=data['d']['mean']
         v_Lsh=data['Lsh']['mean']
-        super().check('b/d',v_b/v_d)
+        if self.i_Valid:
+            super().check('b/d',v_b/v_d)
+        else:
+            ii=0
+            if super().check_c('b/d',v_b/v_d)!=True: ii+=1
+            return ii
     class G(ls.Lbase):
         def __init__(self,n):
             global v_Lsh,v_d,v_b
@@ -1147,6 +1164,7 @@ class THOR_M(penMed):
     b1=0
     g1=0
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','v','th']
         self.const=['Material']
         self.title='THOR Equations'
@@ -1163,7 +1181,10 @@ class THOR_M(penMed):
         super().SaveRange('Validation process is not defined.')
         super().SaveVariable(self.variable)
     def Validation(self,data):
-        print('Validation process is not defined.')
+        if self.i_Valid:
+            print('Validation process is not defined.')
+        else:
+            return 0
     def MatList(self):
         """
         目的:登録されている材料名リストを返す
@@ -1194,6 +1215,7 @@ class THOR_M(penMed):
             th=X[4]
             A=np.pi*d*d/4
             g=0.3048*10**C1*(61024*b*A)**a1*(15432.4*m)**b1*(1/np.cos(th))**g1-v
+            #g=0.3048*10**C1*(61024*b*A)**a1*(2.2046*m)**b1*(1/np.cos(th))**g1-v
             super().SetG(g)
         def dGdXcalc(self):
             global C1,a1,b1,g1
@@ -1228,6 +1250,7 @@ class BRL_M(penMed):
     Su      ultimate tensile strength of shield material
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','v']
         self.const=['Limp','Lsh','Su']
         self.title='BRL Formula'
@@ -1249,11 +1272,20 @@ class BRL_M(penMed):
         Su=data['Su']['mean']
         a7=5.37
         v_bl=a7*1e4*(b*d)**0.75/m**0.5
-        super().check('v_bl',v_bl)
-        super().check('Limp/d',Limp/d)
-        super().check('b/d',b/d)
-        super().check('Lsh/d',Lsh/d)
-        super().check('Su',Su)
+        if self.i_Valid:
+            super().check('v_bl',v_bl)
+            super().check('Limp/d',Limp/d)
+            super().check('b/d',b/d)
+            super().check('Lsh/d',Lsh/d)
+            super().check('Su',Su)
+        else:
+            ii=0
+            if super().check_c('v_bl',v_bl)!=True: ii+=1
+            if super().check_c('Limp/d',Limp/d)!=True: ii+=1
+            if super().check_c('b/d',b/d)!=True: ii+=1
+            if super().check_c('Lsh/d',Lsh/d)!=True: ii+=1
+            if super().check_c('Su',Su)!=True: ii+=1
+            return ii
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -1293,6 +1325,7 @@ class DeMarre_M(penMed):
     v   velocity of impactor
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','v']
         self.const=[]
         self.title='De Marre Formula'
@@ -1307,8 +1340,14 @@ class DeMarre_M(penMed):
         d=data['d']['mean']
         m=data['m']['mean']
         v_bl=0.4311e5*d**0.75*b**0.7/m**0.5
-        super().check('v_bl',v_bl)
-        super().check('m',m)
+        if self.i_Valid:
+            super().check('v_bl',v_bl)
+            super().check('m',m)
+        else:
+            ii=0
+            if super().check_c('v_bl',v_bl)!=True: ii+=1
+            if super().check_c('m',m) !=True: ii+=1
+            return ii           
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -1354,6 +1393,7 @@ class Jowett_M(penMed):
     SetParam(b,d,Lsh)  g計算のためのparameter設定
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','Su','v']
         self.const=['Lsh','Limp']
         self.title='Jowett Formula'
@@ -1392,10 +1432,18 @@ class Jowett_M(penMed):
         if b/d>=0.25 and b/d<0.64:
             vbl=0.87*omg*d*np.sqrt(Su*d/m)*(b/d)**0.42
         ratio=b/d
-        super().check('vbl',vbl)
-        super().check('Su',Su)
-        super().check('Limp/d',Limp/d)
-        super().check('b/d',b/d)
+        if self.i_Valid:
+            super().check('vbl',vbl)
+            super().check('Su',Su)
+            super().check('Limp/d',Limp/d)
+            super().check('b/d',b/d)
+        else:
+            ii=0
+            if super().check_c('vbl',vbl)!=True: ii+=1
+            if super().check_c('Su',Su)!=True: ii+=1
+            if super().check_c('Limp/d',Limp/d)!=True: ii+=1
+            if super().check_c('b/d',b/d)!=True: ii+=1
+            return ii
     class G(ls.Lbase):
         def __init__(self,n):
             global ratio,omg
@@ -1464,6 +1512,7 @@ class Lambert_M(penMed):
     """
     a10=0
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','th','v','Limp']
         self.const=['ro_imp','Material']
         self.title='Lambert and Jonas Approximation'
@@ -1487,12 +1536,22 @@ class Lambert_M(penMed):
         ro_imp=data['ro_imp']['mean']
         mat=data['Material']
         self.setMaterial(mat)
-        super().check('b',b)
-        super().check('d',d)
-        super().check('m',m)
-        super().check('th',th)
-        super().check('Limp/d',Limp/d)
-        super().check('ro_imp',ro_imp)
+        if self.i_Valid:
+            super().check('b',b)
+            super().check('d',d)
+            super().check('m',m)
+            super().check('th',th)
+            super().check('Limp/d',Limp/d)
+            super().check('ro_imp',ro_imp)
+        else:
+            ii=0
+            if super().check_c('b',b)!=True: ii+=1
+            if super().check_c('d',d)!=True: ii+=1
+            if super().check_c('m',m)!=True: ii+=1
+            if super().check_c('th',th)!=True: ii+=1
+            if super().check_c('Limp/d',Limp/d)!=True: ii+=1
+            if super().check_c('ro_imp',ro_imp)!=True: ii+=1
+            return ii
     def MatList(self):
         return ['aluminum','RHA']
     def setMaterial(self,mat):
@@ -1555,9 +1614,10 @@ class Neilson_M(penMed):
     shape 'flat' or 'hemispherical' (ノーズ形状)
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','Su','Lsh','v']
         self.const=['Limp','shape']
-        self.title='Nelson Formula'
+        self.title='Neilson Formula'
         val_range={
             'b/d':[0.14,0.64],
             'Lsh/d':[4,22],
@@ -1574,9 +1634,15 @@ class Neilson_M(penMed):
         Limp=data['Limp']['mean']
         shape=data['shape']
         self.SetNose(Lsh,d,shape)
-        super().check('b/d',b/d)
-        #super().check('Lsh/d',Lsh/d)
-        super().check('Limp/d',Limp/d)
+        if self.i_Valid:
+            super().check('b/d',b/d)
+            #super().check('Lsh/d',Lsh/d)
+            super().check('Limp/d',Limp/d)
+        else:
+            ii=0
+            if super().check_c('b/d',b/d)!=True:ii+=1
+            if super().check_c('Limp/d',Limp/d)!=True:ii+=1
+            return ii
     def SetNose(self,Lsh,d,n_shape):
         global a12
         if n_shape=='flat':
@@ -1634,6 +1700,7 @@ class Ohte_M(penMed):
     v   velocity of impactor
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','v']
         self.const=['Lsh','Su']
         self.title='Ohte et al. Formula'
@@ -1654,12 +1721,22 @@ class Ohte_M(penMed):
         Su=data['Su']['mean']
         Lsh=data['Lsh']['mean']
         v_bl=7.67e4*(b*d)**0.75/m**0.5
-        super().check('v_bl',v_bl)
-        super().check('m',m)
-        super().check('Su',Su)
-        super().check('b',b)
-        super().check('Lsh/b',Lsh/b)
-        super().check('d',d)
+        if self.i_Valid:
+            super().check('v_bl',v_bl)
+            super().check('m',m)
+            super().check('Su',Su)
+            super().check('b',b)
+            super().check('Lsh/b',Lsh/b)
+            super().check('d',d)
+        else:
+            ii=0
+            if super().check_c('v_bl',v_bl)!=True:ii+=1
+            if super().check_c('m',m)!=True:ii+=1
+            if super().check_c('Su',Su)!=True:ii+=1
+            if super().check_c('b',b)!=True:ii+=1
+            if super().check_c('Lsh/b',Lsh/b)!=True:ii+=1
+            if super().check_c('d',d)!=True:ii+=1
+            return ii
     class G(ls.Lbase):
         def __init__(self,n):
             self.n=n
@@ -1700,9 +1777,10 @@ class SRI_M(penMed):
     Limp    length of impactor
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','v','Lsh','Su']
         self.const=['Limp']
-        self.title='Ohte et al. Formula'
+        self.title='SRI Formula'
         val_range={
             'v_bl':[21,122],
             'b/d':[0.1,0.6],
@@ -1722,12 +1800,22 @@ class SRI_M(penMed):
         Limp=data['Limp']['mean']
         a6=0.44
         v_bl=a6*b*np.sqrt(Su*d/m*(42.7+Lsh/b))
-        super().check('v_bl',v_bl)
-        super().check('b/d',b/d)
-        super().check('Lsh/d',Lsh/d)
-        super().check('b/Lsh',b/Lsh)
-        super().check('Lsh/b',Lsh/b)
-        super().check('Limp/d',Limp/d)
+        if self.i_Valid:
+            super().check('v_bl',v_bl)
+            super().check('b/d',b/d)
+            super().check('Lsh/d',Lsh/d)
+            super().check('b/Lsh',b/Lsh)
+            super().check('Lsh/b',Lsh/b)
+            super().check('Limp/d',Limp/d)
+        else:
+            ii=0
+            if super().check_c('v_bl',v_bl)!=True:ii+=1
+            if super().check_c('b/d',b/d)!=True:ii+=1
+            if super().check_c('Lsh/d',Lsh/d)!=True:ii+=1
+            if super().check_c('b/Lsh',b/Lsh)!=True:ii+=1
+            if super().check_c('Lsh/b',Lsh/b)!=True:ii+=1
+            if super().check_c('Limp/d',Limp/d) !=True:ii+=1
+            return ii           
     class G(ls.Lbase):
         def __init__(self,n):
             global a6
@@ -1780,6 +1868,7 @@ class SwRI_M(penMed):
     b2=0
     b3=0
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','m','v','th']
         self.title='Southwest Research Institute (SwRI) model'
         self.const=['fragment']
@@ -1809,7 +1898,10 @@ class SwRI_M(penMed):
         b1=tab[a]["b1"]
         b2=tab[a]["b2"]
         b3=tab[a]["b3"]
-        print('Validation process is not defined.')
+        if self.i_Valid:
+            print('Validation process is not defined.')
+        else:
+            return 0
     class G(ls.Lbase):
         def __init__(self,n):
             global S,b1,b2,b3
@@ -1853,9 +1945,10 @@ class WenJones_M(penMed):
     v   velocity of impactor
     """
     def __init__(self):
+        self.i_Valid=True  #Validation結果を出力するときTrue
         self.variable=['b','d','m','Sy','Lsh','v']
         self.const=['Su']
-        self.title='Jowett Formula'
+        self.title='Wen Jones Formula'
         val_range={
             'vbl':[0,20],
             'Su':[340,440],
@@ -1873,11 +1966,20 @@ class WenJones_M(penMed):
         Su=data['Su']['mean']
         Lsh=data['Lsh']['mean']
         vbl=2*d*np.sqrt(Sy*d/m*(0.25*np.pi*(b/d)**2+(b/d)**1.47*(Lsh/d)**0.21))
-        super().check('vbl',vbl)
-        super().check('Su',Su)
-        super().check('Lsh/d',Lsh/d)
-        super().check('Lsh/b',Lsh/b)
-        super().check('b/d',b/d)
+        if self.i_Valid:
+            super().check('vbl',vbl)
+            super().check('Su',Su)
+            super().check('Lsh/d',Lsh/d)
+            super().check('Lsh/b',Lsh/b)
+            super().check('b/d',b/d)
+        else:
+            ii=0
+            if super().check_c('vbl',vbl)!=True:ii+=1
+            if super().check_c('Su',Su)!=True:ii+=1
+            if super().check_c('Lsh/d',Lsh/d)!=True:ii+=1
+            if super().check_c('Lsh/b',Lsh/b)!=True:ii+=1
+            if super().check_c('b/d',b/d) !=True:ii+=1
+            return ii          
     class G(ls.Lbase):
         def __init__(self,n):
             global ratio,omg
@@ -1908,4 +2010,67 @@ class WenJones_M(penMed):
             dGdX[3]= d*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)/Sy
             dGdX[4]= 0.21*d*(Lsh/d)**0.21*(b/d)**1.47*np.sqrt(Sy*d*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47)/m)/(Lsh*(0.785398163397448*b**2/d**2 + (Lsh/d)**0.21*(b/d)**1.47))
             dGdX[5]= -1
+            super().SetdGdX(dGdX)
+################################
+#    運動エネルギ処理用          #
+################################
+#             SRI_Ek           #
+################################
+class SRI_Ek(penMed):
+    """
+    Stanford Research Institute (SRI) correlation (1963)
+    ---
+    b   thickness of a shield
+    d   maximum diameter of impactor
+    Su  ultimate tensile strength of shield material
+    設定するべき定数
+    Ek   kinetic energy
+    ro  mass density of projectile
+    C=Limp/d
+    Lsh unsupported shield panel span
+    """
+    def __init__(self):
+        self.variable=['b','d','Su']
+        self.title='Ohte et al. Formula'
+        val_range={
+            'v_bl':[21,122],
+            'b/d':[0.1,0.6],
+            'Lsh/d':[5,8],
+            'b/Lsh':[0.002,0.05],
+            'Lsh/b':[0.0,100],
+            'Limp/d':[5,8]
+        }
+        super().SaveRange(val_range)
+        super().SaveVariable(self.variable)
+    def setConst(self,c_Ek,c_ro,c_C,c_Lsh):
+        global Ek,ro,C,Lsh
+        Ek=c_Ek
+        ro=c_ro
+        C=c_C
+        Lsh=c_Lsh
+    class G(ls.Lbase):
+        def __init__(self,n):
+            global Ek,ro,C,Lsh,a6
+            self.n=n
+            super().__init__(self.n)
+            a6=0.44
+        def gcalc(self):
+            global Ek,ro,C,Lsh,a6
+            X=super().GetX()
+            b=X[0]
+            d=X[1]
+            Su=X[2]
+            v=np.sqrt(2*Ek/ro/C)/d
+            g=a6*b*np.sqrt(Su/C/d/ro*(42.7+Lsh/b))-v
+            super().SetG(g)
+        def dGdXcalc(self):
+            global Ek,ro,C,Lsh,a6
+            X=super().GetX()
+            dGdX=super().GetdGdX()
+            b=X[0]
+            d=X[1]
+            Su=X[2]
+            dGdX[0]=-Lsh*a6*np.sqrt(Su*(Lsh/b + 42.7)/(C*d*ro))/(2*b*(Lsh/b + 42.7)) + a6*np.sqrt(Su*(Lsh/b + 42.7)/(C*d*ro))
+            dGdX[1] =-a6*b*np.sqrt(Su*(Lsh/b + 42.7)/(C*d*ro))/(2*d) + np.sqrt(2)*np.sqrt(Ek/(C*ro))/d**2
+            dGdX[2] =a6*b*np.sqrt(Su*(Lsh/b + 42.7)/(C*d*ro))/(2*Su)
             super().SetdGdX(dGdX)

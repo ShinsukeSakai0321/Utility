@@ -4,11 +4,224 @@ from tkinter import ttk
 import Penetration as pen
 import pandas as pd
 import pickle
+import matplotlib.pyplot as plt
+import numpy as np
+class Base():
+    def read_pickle(self,fname):
+        """
+        fnameで示すファイルから辞書形式データを読み取り、戻り値で返す
+        """
+        with open(fname,'rb') as f:
+            df = pickle.load(f)
+        return df
+    def write_pickle(self,fname,df):
+        with open(fname, mode='wb') as f:
+            pickle.dump(df,f)
+    def searchFormula(self,form='BRL'):
+        """
+        formの文字列と一致する公式オブジェクトをself.formulaにセットする
+        """
+        method=[
+            'AlyLi',
+            'BRL',
+            'DeMarre',
+            'Jowett',
+            'Lambert',
+            'Neilson',
+            'Ohte',
+            'SRI',
+            'SwRI',
+            'THOR',
+            'WenJones'  
+        ]
+        iFormula=method.index(form)
+        if iFormula==0:
+            formula=pen.AlyLi_M()
+        if iFormula==1:
+            formula=pen.BRL_M()
+        if iFormula==2:
+            formula=pen.DeMarre_M()
+        if iFormula==3:
+            formula=pen.Jowett_M()
+        if iFormula==4:
+            formula=pen.Lambert_M()
+        if iFormula==5:
+            formula=pen.Neilson_M()
+        if iFormula==6:
+            formula=pen.Ohte_M()
+        if iFormula==7:
+            formula=pen.SRI_M()
+        if iFormula==8:
+            formula=pen.SwRI_M()
+        if iFormula==9:
+            formula=pen.THOR_M()
+        if iFormula==10:
+            formula=pen.WenJones_M()
+        self.formula=formula
+    def cdata2ddata(self,title,ind,cdata):
+        """
+        title,描画インデックスind,cdataに基づきddataを構成し、もどす
+        """
+        dd={}
+        dd['title']=title
+        dd['ind']=ind
+        dd['cdata']=cdata
+        return dd
+    def draw_graph(self,df2,cdata):
+        df=df2.copy()
+        self.searchFormula(form=df['formula'])
+        self.formula.i_Valid=False  
+        key=list(cdata.keys())
+        var=key[0]
+        df['v']['mean']=0
+        div=cdata[var]['div']
+        vmin=cdata[var]['min']
+        vmax=cdata[var]['max']
+        div=cdata[var]['div']
+        var_r=np.linspace(vmin,vmax,div)
+        vlim=[]
+        for val in var_r:
+            df[var]['mean']=val
+            self.formula.Validation(df)
+            vlim.append(self.formula.Gcheck(df))
+        plt.xlabel(var)
+        plt.xticks(rotation=45)
+        plt.ylabel('Vbl(m/s)')
+        plt.title(self.formula.title)
+        plt.plot(var_r,vlim)
+        plt.show()
+    def draw_contour(self,df,ddata):
+        """
+        辞書型データdfの条件で、描画条件を指定する辞書型データddataに基づき等高線描画する
+        """
+        self.searchFormula(form=df['formula'])
+        self.formula.i_Valid=False  
+        self.formula.Validation(df)
+        if 'Material' in df.keys():
+            self.formula.setMaterial(df['Material'])
+        cdata=ddata['cdata']
+        key=list(cdata.keys())
+        ii=ddata['ind']
+        B,M,Z=self.formula.MakeContour(df,cdata)
+        if ii==0:
+            plt.pcolormesh(B, M, Z[ii], cmap='hsv',vmin=0.0,vmax=1.0)
+        else:
+            plt.pcolormesh(B, M, Z[ii], cmap='hsv')
+        plt.title(ddata['title'])
+        pp=plt.colorbar (orientation="vertical") # カラーバーの表示 
+        plt.xlabel(key[0], fontsize=20)
+        plt.ylabel(key[1], fontsize=20)
+        plt.subplots_adjust(left=0.2,bottom=0.2)
+        plt.show()
+    def Calc_contour(self,df,ddata):
+        """
+        辞書型データdfの条件で、描画条件を指定する辞書型データddataに基づき等高線描画する
+        """
+        self.searchFormula(form=df['formula'])
+        self.formula.i_Valid=False  
+        self.formula.Validation(df)
+        if 'Material' in df.keys():
+            self.formula.setMaterial(df['Material'])
+        cdata=ddata['cdata']
+        key=list(cdata.keys())
+        B,M,Z=self.formula.MakeContour(df,cdata)
+        return B,M,Z
+    def d_contour(self,B,M,Z,ddata,vmin,vmax):
+        ii=ddata['ind']
+        cdata=ddata['cdata']
+        key=list(cdata.keys())
+        plt.pcolormesh(B, M, Z[ii], cmap='hsv',vmin=vmin,vmax=vmax)
+        plt.title(ddata['title'])
+        pp=plt.colorbar (orientation="vertical") # カラーバーの表示 
+        plt.xlabel(key[0], fontsize=20)
+        plt.ylabel(key[1], fontsize=20)
+        plt.subplots_adjust(left=0.2,bottom=0.2)
+        plt.show()                   
+    def Calc(self,df2):
+        """
+        辞書型データに基づき確率論的評価を行い、結果を出力する
+        """
+        df=df2.copy()
+        self.searchFormula(form=df['formula'])
+        self.formula.i_Valid=True
+        if 'Material' in df.keys():
+            self.formula.setMaterial(df['Material'])
+            print('Material:',df['Material'])
+        if 'shape' in df.keys():
+            print('shape:',df['shape'])
+        print('--------------',self.formula.title,'--------------')
+        self.formula.Validation(df)
+        print('*** Probabilistic analysis ***')
+        print('variable=',self.formula.variable)
+        print('value=',self.formula.Gcheck(df))#確率変数の平均値に対するg値評価
+        self.formula.Reliability(df)#信頼性評価
+        print('beta=',self.formula.GetBeta())#信頼性指標の出力
+        print('Alpha=',self.formula.GetAlpha())#感度の出力
+        print('Pf=',self.formula.GetPOF())#破損確率の出力
+        print('*** Analysis of Balistic Limit Velocity ***')
+        df['v']['mean']=0
+        print('Vbl=',self.formula.Gcheck(df))
+    def CalcDict(self,df2):
+        """
+        Calcと同じ機能であるが、辞書型データに出力しもどす
+        """
+        res={}
+        df=df2.copy()
+        self.searchFormula(form=df['formula'])
+        form=df['formula']
+        res[form]={}
+        self.formula.i_Valid=False
+        if 'Material' in df.keys():
+            self.formula.setMaterial(df['Material'])
+            res[form]['Material']=df['Material']
+        if 'shape' in df.keys():
+            res[form]['shape']=df['shape']
+        res[form]['unsatisfied']=self.formula.Validation(df)
+        res[form]['variable']=self.formula.variable
+        res[form]['value']=self.formula.Gcheck(df)
+        self.formula.Reliability(df)#信頼性評価
+        res[form]['beta']=self.formula.GetBeta()
+        res[form]['Alpha']=self.formula.GetAlpha()
+        res[form]['Pf']=self.formula.GetPOF()
+        vv=df['v']['mean']
+        df['v']['mean']=0
+        res[form]['Vbl']=self.formula.Gcheck(df)
+        df['v']['mean']=vv
+        return res
+    def Vbl(self,df):
+        """
+        辞書型データで与えられる入力条件dfについて、限界速度の計算を行い、結果を出力する
+        """
+        self.searchFormula(form=df['formula'])
+        self.formula.i_Valid=True
+        df2=df.copy()
+        print('*** Analysis of Balistic Limit Velocity ***')
+        df2['v']['mean']=0
+        print('Vbl=',self.formula.Gcheck(df2))
+    def apCalc(self):
+        """
+        辞書型データself.dfに対して確率論的評価を行い、結果を出力する
+        """
+        self.Calc(self.df)
+    def setDf(self,df):
+        """
+        辞書型データdfをself.dfにセットする
+        """
+        self.df=df
+    def CalcPenet(self,fname):
+        """
+        fnameで与えられるpickle型データから辞書型データを読み込み、確率論的計算を行って、結果を出力する
+        """
+        df = self.read_pickle(fname)
+        self.Calc(df)
+        print('File=',fname)      
+
+       
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+        self.bb=Base()
         self.master = master
-        self.master.title('Penetration analysis system')
         self.method=[
             'AlyLi',
             'BRL',
@@ -26,14 +239,19 @@ class Application(tk.Frame):
         lbl.place(x=20,y=10)
         # チェックボックスON/OFFの状態
 
-        self.var_item = tk.IntVar()
+        self.var_item = tk.IntVar() #formulaの選択項目
         self.var_prob=tk.IntVar()
+        self.var_draw=tk.IntVar()
+        self.xcoord_item=tk.IntVar()
+        self.ycoord_item=tk.IntVar()
         #手法の設定
         for i in range(len(self.method)):
             btn=tk.Radiobutton(self.master,value=i, variable=self.var_item,text=self.method[i],command=self.change_selected_item) 
             btn.place(x=10, y=30 + (i * 24))
-        btn_v=tk.Radiobutton(self.master,value=0,variable=self.var_prob,text='Evaluate v_lim',command=self.change_selected_item)
-        btn_p=tk.Radiobutton(self.master,value=1,variable=self.var_prob,text='Probabilistic analysis',command=self.change_selected_item)
+        self.btn_v=tk.Radiobutton(self.master,value=0,variable=self.var_prob,text='Evaluate v_lim',command=self.change_selected_item)
+        self.btn_p=tk.Radiobutton(self.master,value=1,variable=self.var_prob,text='Probabilistic analysis',command=self.change_selected_item)
+        self.btn_contour=tk.Radiobutton(self.master,value=0,variable=self.var_draw,text='Contour',command=self.change_contour_item)
+        self.btn_graph=tk.Radiobutton(self.master,value=1,variable=self.var_draw,text='Graph',command=self.change_contour_item)
         #self.var=['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v','ro_imp','a10','shape','fragment','Material']
         self.var=['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v','ro_imp','shape','fragment','Material']
         lbl_b = tk.Label(text='b'); self.lbl_b=tk.Label(text='*')
@@ -53,6 +271,7 @@ class Application(tk.Frame):
         lbl_const=tk.Label(text='Const.')
         lbl_mean=tk.Label(text='Mean')
         lbl_cov=tk.Label(text='COV')
+
         en=15
         self.txt_b_m = tk.Entry(width=en)
         self.txt_d_m = tk.Entry(width=en)
@@ -80,11 +299,15 @@ class Application(tk.Frame):
         #self.txt_frag=tk.Entry(width=en*2)
         self.combo_frag=ttk.Combobox(width=en,values=['none'])
         self.combo_mat=ttk.Combobox(width=en,values=['none'])
-        self.txt_Text=tk.Text(height=25,width=70)
+        self.combo_item=ttk.Combobox(width=en,values=['none'])
+        self.combo_item.bind('<<ComboboxSelected>>', self.comboSelected)
+        #self.txt_Text=tk.Text(height=25,width=70)
         
         lbl_title=tk.Label(text='Title')
         self.txt_title=tk.Entry(width=en*5)
-        button_calc = tk.Button(self.master, text = "Calc", command = self.Calc_click)
+        self.button_calc = tk.Button(self.master, text = "Calc", command = self.Calc_click)
+        self.button_draw=tk.Button(self.master,text="Draw",command=self.Draw_click)
+        self.button_draw.config(state='disabled')
         button_load= tk.Button(self.master, text = "Load", command = self.Load_click)
         self.txt_load=tk.Entry(width=en)
         button_save= tk.Button(self.master, text = "Save", command = self.Save_click)
@@ -92,7 +315,7 @@ class Application(tk.Frame):
         self.txt_save=tk.Entry(width=en)
         i=0; xx=150; x_ast=xx-10; yy=30; dy_ast=3; dx0=50; dx=100
         button_exit.place(x=30,y=30 + (len(self.method) * 24)+70)
-        self.txt_Text.place(x=xx+260,y=yy)
+        #self.txt_Text.place(x=xx+260,y=yy)
         lbl_const.place(x=xx-30,y=yy-24)
         lbl_mean.place(x=xx+dx0,y=yy-24)
         lbl_cov.place(x=xx+dx0+dx,y=yy-24)
@@ -133,48 +356,164 @@ class Application(tk.Frame):
         self.combo_frag.place(x=xx+dx0,y=yy)
         yy+=24;lbl_Material.place(x=xx,y=yy); self.lbl_Material.place(x=x_ast,y=yy+dy_ast);i+=1
         self.combo_mat.place(x=xx+dx0,y=yy)
-        yy+=48;btn_v.place(x=xx,y=yy)
-        btn_p.place(x=xx+dx,y=yy)
+
+        yy+=48
+        
         yy+=48; lbl_title.place(x=xx,y=yy); self.txt_title.place(x=xx+dx0,y=yy)
-        yy+=48; button_calc.place(x=xx,y=yy)
+        yy+=48; 
         yy+=48; button_load.place(x=xx,y=yy); self.txt_load.place(x=xx+dx0,y=yy)
         yy+=48; button_save.place(x=xx,y=yy); self.txt_save.place(x=xx+dx0,y=yy)
 
-        self.change_selected_item()
+
+        #self.change_selected_item()
+    def comboSelected(self,Wig):
+        ii=self.combo_item.current()
+        vmax=np.max(self.Z[ii])
+        vmin=np.min(self.Z[ii])
+        self.vv_min.delete(0,tk.END)
+        self.vv_max.delete(0,tk.END)
+        self.vv_min.insert(0,'{:.3e}'.format(vmin))
+        self.vv_max.insert(0,'{:.3e}'.format(vmax))
+    def Draw_click(self):
+        self.formula.i_Valid=False
+        cdata=self.MakeCdata()
+        data=self.MakeDict()
+        self.formula.Validation(data)
+        if 'Material' in data.keys():
+            self.formula.setMaterial(data['Material'])
+        key=list(cdata.keys())
+        if self.var_draw.get()==0:
+            #等高線描画
+            ii=self.combo_item.current()
+            var=self.combo_item.get()
+            ddata1=self.bb.cdata2ddata(var,ii,cdata)
+            #self.bb.draw_contour(data,ddata1)
+            vmin=self.vv_min.get()
+            vmax=self.vv_max.get()
+            self.bb.d_contour(self.B,self.M,self.Z,ddata1,vmin,vmax)
+        if self.var_draw.get()==1:
+            # 限界速度の描画
+            df=self.MakeDict()
+            cdata=self.MakeCdata()
+            self.bb.draw_graph(df,cdata)
+
+
+
+    def MakeCdata(self):
+        i_x=self.xcoord_item.get()
+        cdata={}
+        self.make(cdata,i_x)
+        if self.var_draw.get()==1:
+            return cdata
+        i_y=self.ycoord_item.get()
+        self.make(cdata,i_y)
+        return cdata
+    def make(self,cdata,ii):
+        if ii==0:
+            self.makedata(cdata,'b',self.b_min.get(),self.b_max.get(),self.b_div.get())
+        if ii==1:
+            self.makedata(cdata,'d',self.d_min.get(),self.d_max.get(),self.d_div.get())
+        if ii==2:
+            self.makedata(cdata,'m',self.m_min.get(),self.m_max.get(),self.m_div.get())
+        if ii==3:
+            self.makedata(cdata,'Su',self.Su_min.get(),self.Su_max.get(),self.Su_div.get())
+        if ii==4:
+            self.makedata(cdata,'Sy',self.Sy_min.get(),self.Sy_max.get(),self.Sy_div.get())
+        if ii==5:
+            self.makedata(cdata,'Lsh',self.Lsh_min.get(),self.Lsh_max.get(),self.Lsh_div.get())
+        if ii==6:
+            self.makedata(cdata,'th',self.th_min.get(),self.th_max.get(),self.th_div.get())
+        if ii==7:
+            self.makedata(cdata,'Limp',self.Limp_min.get(),self.Limp_max.get(),self.Limp_div.get())
+        if ii==8:
+            self.makedata(cdata,'v',self.v_min.get(),self.v_max.get(),self.v_div.get())
+    def makedata(self,cdata,c,v_min,v_max,v_div):
+        cdata[c]={}
+        cdata[c]['min']=float(v_min)
+        cdata[c]['max']=float(v_max)
+        cdata[c]['div']=int(v_div)
+    def change_contour_item(self):
+        if self.var_draw.get()==0:
+            self.combo_item.config(state='normal')
+            self.makeItem()
+        else:
+            self.combo_item.config(state='disabled')
+        i_x=self.xcoord_item.get()
+        i_y=self.ycoord_item.get()
+        self.mod(self.b_min,self.b_max,self.b_div,i_x,i_y,0)
+        self.mod(self.d_min,self.d_max,self.d_div,i_x,i_y,1)
+        self.mod(self.m_min,self.m_max,self.m_div,i_x,i_y,2)
+        self.mod(self.Su_min,self.Su_max,self.Su_div,i_x,i_y,3) 
+        self.mod(self.Sy_min,self.Sy_max,self.Sy_div,i_x,i_y,4) 
+        self.mod(self.Lsh_min,self.Lsh_max,self.Lsh_div,i_x,i_y,5)
+        self.mod(self.th_min,self.th_max,self.th_div,i_x,i_y,6)
+        self.mod(self.Limp_min,self.Limp_max,self.Limp_div,i_x,i_y,7)
+        self.mod(self.v_min,self.v_max,self.v_div,i_x,i_y,8)             
+    def mod(self,o_min,o_max,o_div,i_x,i_y,ii):
+        o_min['state']='disable'
+        o_max['state']='disable'
+        o_div['state']='disable'
+        if i_x==ii:
+            o_min['state']='normal'
+            o_max['state']='normal'
+            o_div['state']='normal'
+        if self.var_draw.get()==0 and i_y==ii:
+            o_min['state']='normal'
+            o_max['state']='normal'
+            o_div['state']='normal'        
     def Save_click(self):
         df=self.MakeDict()
         fname=self.txt_save.get()
-        with open(fname, mode='wb') as f:
-            pickle.dump(df,f)
+        self.bb.write_pickle(fname,df)
     def Load_click(self):
         fname=self.txt_load.get()
-        with open(fname,'rb') as f:
-            df = pickle.load(f)
+        df = self.bb.read_pickle(fname)
+        self.bb.setDf(df)
         self.toDict(df)
+        print('File[',fname,']') 
     def Calc_click(self):
-        df=self.MakeDict()
-        if 'Material' in df.keys():
-            self.formula.setMaterial(df['Material'])
-        print('--------------',self.formula.title,'--------------')
-        self.formula.Validation(df)
-        if self.iProb==1:
-            print('*** Probabilistic analysis ***')
-            print('variable=',self.formula.variable)
-            print('value=',self.formula.Gcheck(df))#確率変数の平均値に対するg値評価
-            self.formula.Reliability(df)#信頼性評価
-            print('beta=',self.formula.GetBeta())#信頼性指標の出力
-            print('Alpha=',self.formula.GetAlpha())#感度の出力
-            print('Pf=',self.formula.GetPOF())#破損確率の出力
-        else:
-            print('*** Analysis of Balistic Limit Velocity ***')
-            df['v']['mean']=0
-            print('Vbl=',self.formula.Gcheck(df))
-        return
+
+        if self.master.title()=='Drawing system':
+            self.formula.i_Valid=False
+            cdata=self.MakeCdata()
+            data=self.MakeDict()
+            self.formula.Validation(data)
+            if 'Material' in data.keys():
+                self.formula.setMaterial(data['Material'])
+            key=list(cdata.keys())
+            if self.var_draw.get()==0:
+                #等高線描画
+                ii=self.combo_item.current()
+                var=self.combo_item.get()
+                ddata1=self.bb.cdata2ddata(var,ii,cdata)
+                B,M,Z=self.bb.Calc_contour(data,ddata1)
+                self.B=B
+                self.M=M
+                self.Z=Z
+                self.lbl_item.config(state='normal')
+                self.button_draw.config(state='normal')
+                self.combo_item.config(state='normal')
+                #self.combo_item.set('PoF')
+                #self.bb.d_contour(B,M,Z,ddata1)
+                #self.bb.draw_contour(data,ddata1)
+            if self.var_draw.get()==1:
+                # 限界速度の描画
+                cdata=self.MakeCdata() 
+                df=self.MakeDict()
+                #self.bb.draw_graph(df,cdata)
+        else:              
+            df=self.MakeDict()
+            if self.iProb==1:
+                self.bb.Calc(df)
+            else:
+                self.bb.Vbl(df)
+
     def MakeDict(self):
         df={}
         df=self.dfAdd(df)
         df=self.dfAddC(df)
         df['Title']=self.txt_title.get()
+        df['formula']=self.method[self.var_item.get()]
         return df
     def Clear(self):
         self.txt_title.delete(0,tk.END)
@@ -203,6 +542,8 @@ class Application(tk.Frame):
 
     def toDict(self,df):
         self.Clear()
+        self.var_item.set(self.method.index(df['formula']))
+        self.change_selected_item()
         self.txt_title.insert(0,df['Title'])
         for i in range(len(self.formula.variable)):
             var=self.formula.variable[i]
@@ -529,13 +870,141 @@ class Application(tk.Frame):
         self.makeDisable()
         self.makeNormal()
         self.makeConst()
-        self.txt_Text.delete("1.0","end")
-        self.txt_Text.insert(1.0,self.formula.__doc__)
+        #self.txt_Text.delete("1.0","end")
+        #self.txt_Text.insert(1.0,self.formula.__doc__)
+        if self.var_draw.get()==0:
+            self.combo_item.config(state='normal')
+            self.makeItem()
+        else:
+            self.combo_item.config(state='disabled')
+        
         return
+    def makeItem(self):
+        """
+        等高線描画項目を構成し、comboboxに入力する
+        """
+        var=self.formula.variable
+        vv=['PoF','Beta']
+        for v in var:
+            vv.append('ar_'+v)
+        self.combo_item['values']=vv
 class InterPenet():
     def __init__(self):
         root = tk.Tk()
         root.geometry('1000x700')
         app = Application(master=root)
-        app.mainloop()        
+        app.master.title('Penetration analysis system')
+        app.txt_Text=tk.Text(height=25,width=70)
+        xx=150
+        app.txt_Text.place(x=150+260,y=30)
+        app.btn_v.place(x=150,y=366)
+        app.btn_p.place(x=150+100,y=366)
+        app.change_selected_item()
+        app.txt_Text.delete("1.0","end")
+        app.txt_Text.insert(1.0,app.formula.__doc__)
+        app.button_calc.place(x=xx,y=366+48+48)
+        app.mainloop()
+class Drawing():      
+    def __init__(self):
+        root = tk.Tk()
+        en=15
+        root.geometry('1000x700')
+        app = Application(master=root)
+        app.master.title('Drawing system')
+        app.btn_p.invoke()
+        app.change_selected_item()
+        app.label_x=tk.Label(text='X-coord')
+        app.label_y=tk.Label(text='Y-coord')
+        app.label_min=tk.Label(text='min')
+        app.label_max=tk.Label(text='max')
+        app.label_div=tk.Label(text='div')
+        app.lbl_item=tk.Label(text='item')
 
+        xx=150
+        app.btn_contour.place(x=150,y=366)
+        app.btn_graph.place(x=150+100,y=366)
+        app.button_draw.place(x=xx,y=366+48+48); app.button_calc.place(x=xx-50,y=366+48+48) 
+        app.lbl_item.place(x=xx+50,y=366+48+48); app.lbl_item.config(state='disabled')
+        app.combo_item.place(x=xx+80,y=366+48+48); app.combo_item.config(state='disabled')
+        
+        
+        app.vv_min=tk.Entry(width=en); app.vv_min.place(x=xx+200,y=366+48+48)
+        app.vv_max=tk.Entry(width=en); app.vv_max.place(x=xx+200+100,y=366+48+48)
+        app.label_vmin=tk.Label(text='vmin'); app.label_vmin.place(x=xx+200+30,y=366+48+24)
+        app.label_vmax=tk.Label(text='vmin'); app.label_vmax.place(x=xx+200+100+30,y=366+48+24)
+        app.label_x.place(x=400,y=6)
+        app.label_y.place(x=450,y=6)
+        app.label_min.place(x=540,y=6)
+        app.label_max.place(x=640,y=6)
+        app.label_div.place(x=740,y=6)
+        for i in range(9):
+            btn=tk.Radiobutton(app.master,value=i, variable=app.xcoord_item,command=app.change_contour_item) 
+            btn.place(x=400, y=30 + (i * 24))
+            bt2=tk.Radiobutton(app.master,value=i, variable=app.ycoord_item,command=app.change_contour_item) 
+            bt2.place(x=450, y=30 + (i * 24))
+        xx=500; dx=100; yy=30; dy=24
+        app.b_min=tk.Entry(width=en)
+        app.b_min.place(x=xx,y=yy)
+        app.b_max=tk.Entry(width=en)
+        app.b_max.place(x=xx+dx,y=yy)
+        app.b_div=tk.Entry(width=en)
+        app.b_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.d_min=tk.Entry(width=en)
+        app.d_min.place(x=xx,y=yy)
+        app.d_max=tk.Entry(width=en)
+        app.d_max.place(x=xx+dx,y=yy)
+        app.d_div=tk.Entry(width=en)
+        app.d_div.place(x=xx+dx*2,y=yy)        
+        yy+=dy
+        app.m_min=tk.Entry(width=en)
+        app.m_min.place(x=xx,y=yy)
+        app.m_max=tk.Entry(width=en)
+        app.m_max.place(x=xx+dx,y=yy)
+        app.m_div=tk.Entry(width=en)
+        app.m_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.Su_min=tk.Entry(width=en)
+        app.Su_min.place(x=xx,y=yy)
+        app.Su_max=tk.Entry(width=en)
+        app.Su_max.place(x=xx+dx,y=yy)
+        app.Su_div=tk.Entry(width=en)
+        app.Su_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.Sy_min=tk.Entry(width=en)
+        app.Sy_min.place(x=xx,y=yy)
+        app.Sy_max=tk.Entry(width=en)
+        app.Sy_max.place(x=xx+dx,y=yy)
+        app.Sy_div=tk.Entry(width=en)
+        app.Sy_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.Lsh_min=tk.Entry(width=en)
+        app.Lsh_min.place(x=xx,y=yy)
+        app.Lsh_max=tk.Entry(width=en)
+        app.Lsh_max.place(x=xx+dx,y=yy)
+        app.Lsh_div=tk.Entry(width=en)
+        app.Lsh_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.th_min=tk.Entry(width=en)
+        app.th_min.place(x=xx,y=yy)
+        app.th_max=tk.Entry(width=en)
+        app.th_max.place(x=xx+dx,y=yy)
+        app.th_div=tk.Entry(width=en)
+        app.th_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.Limp_min=tk.Entry(width=en)
+        app.Limp_min.place(x=xx,y=yy)
+        app.Limp_max=tk.Entry(width=en)
+        app.Limp_max.place(x=xx+dx,y=yy)
+        app.Limp_div=tk.Entry(width=en)
+        app.Limp_div.place(x=xx+dx*2,y=yy)
+        yy+=dy
+        app.v_min=tk.Entry(width=en)
+        app.v_min.place(x=xx,y=yy)
+        app.v_max=tk.Entry(width=en)
+        app.v_max.place(x=xx+dx,y=yy)
+        app.v_div=tk.Entry(width=en)
+        app.v_div.place(x=xx+dx*2,y=yy)
+        
+             
+        app.mainloop()
