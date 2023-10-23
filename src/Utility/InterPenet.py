@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-#from Utility import Penetration as pen
-import Penetration as pen
+from Utility import Penetration as pen
+#import Penetration as pen
 import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
