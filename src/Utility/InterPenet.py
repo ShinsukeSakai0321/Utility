@@ -1,12 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
-from Utility import Penetration as pen
+from Penetration import Penetration as pen
 #import Penetration as pen
 import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+from tkinter import filedialog
 class Base():
+    """貫通公式を管理するクラス
+    """
     def read_pickle(self,fname):
         """
         fnameで示すファイルから辞書形式データを読み取り、戻り値で返す
@@ -17,6 +21,13 @@ class Base():
     def write_pickle(self,fname,df):
         with open(fname, mode='wb') as f:
             pickle.dump(df,f)
+    def setFormula(self,formula):
+        """
+        formulaに与える公式のインスタンスをself.formulaにセットする
+        """
+        self.formula=formula
+    def getFormula(self):
+        return self.formula
     def searchFormula(self,form='BRL'):
         """
         formの文字列と一致する公式オブジェクトをself.formulaにセットする
@@ -34,29 +45,31 @@ class Base():
             'THOR',
             'WenJones'  
         ]
+        if form not in method:
+            return
         iFormula=method.index(form)
         if iFormula==0:
-            formula=pen.AlyLi_M()
+            formula=pen.AlyLi()
         if iFormula==1:
-            formula=pen.BRL_M()
+            formula=pen.BRL()
         if iFormula==2:
-            formula=pen.DeMarre_M()
+            formula=pen.DeMarre()
         if iFormula==3:
-            formula=pen.Jowett_M()
+            formula=pen.Jowett()
         if iFormula==4:
-            formula=pen.Lambert_M()
+            formula=pen.Lambert()
         if iFormula==5:
-            formula=pen.Neilson_M()
+            formula=pen.Neilson()
         if iFormula==6:
-            formula=pen.Ohte_M()
+            formula=pen.Ohte()
         if iFormula==7:
-            formula=pen.SRI_M()
+            formula=pen.SRI()
         if iFormula==8:
-            formula=pen.SwRI_M()
+            formula=pen.SwRI()
         if iFormula==9:
-            formula=pen.THOR_M()
+            formula=pen.THOR()
         if iFormula==10:
-            formula=pen.WenJones_M()
+            formula=pen.WenJones()
         self.formula=formula
     def cdata2ddata(self,title,ind,cdata):
         """
@@ -141,33 +154,40 @@ class Base():
         """
         辞書型データに基づき確率論的評価を行い、結果を出力する
         """
+        dict={}
         df=df2.copy()
         self.searchFormula(form=df['formula'])
         self.formula.i_Valid=True
-        if 'Material' in df.keys():
-            self.formula.setMaterial(df['Material'])
-            print('Material:',df['Material'])
-        if 'shape' in df.keys():
-            print('shape:',df['shape'])
-        print('--------------',self.formula.title,'--------------')
+
+        ##################################################
+        #つまり、クラスGに特殊処理があるとき、貫通公式にはgDict関数を、クラスGには、setDict関数をもつ必要がある。
+        ##################################################
         self.formula.Validation(df)
         print('*** Probabilistic analysis ***')
+        print('[',self.formula.GetTitle(),']')
         print('variable=',self.formula.variable)
-        print('value=',self.formula.Gcheck(df))#確率変数の平均値に対するg値評価
-        self.formula.Reliability(df)#信頼性評価
+        #print('value=',self.formula.Gcheck(df))#確率変数の平均値に対するg値評価
+
+        self.formula.Calc(df)#信頼性評価
         print('beta=',self.formula.GetBeta())#信頼性指標の出力
         print('Alpha=',self.formula.GetAlpha())#感度の出力
         print('Pf=',self.formula.GetPOF())#破損確率の出力
         print('*** Analysis of Balistic Limit Velocity ***')
         df['v']['mean']=0
-        print('Vbl=',self.formula.Gcheck(df))
+        df['Me']['mean']=1.0
+        mu,sig,dist=self.formula.makeData(df)
+        print('Vbl=',self.formula.gcalc(mu))
     def CalcDict(self,df2):
         """
         Calcと同じ機能であるが、辞書型データに出力しもどす
         """
+        dict={}
         res={}
         df=df2.copy()
         self.searchFormula(form=df['formula'])
+        ##################################################
+        #つまり、クラスGに特殊処理があるとき、貫通公式にはgDict関数を、クラスGには、setDict関数をもつ必要がある。
+        ##################################################
         form=df['formula']
         res[form]={}
         self.formula.i_Valid=False
@@ -178,8 +198,9 @@ class Base():
             res[form]['shape']=df['shape']
         res[form]['unsatisfied']=self.formula.Validation(df)
         res[form]['variable']=self.formula.variable
-        res[form]['value']=self.formula.Gcheck(df)
-        self.formula.Reliability(df)#信頼性評価
+        mu,sig,dist=self.formula.makeData(df)
+        res[form]['value']=self.formula.gcalc(mu)
+        self.formula.Reliability(df,dict=dict)#信頼性評価
         res[form]['beta']=self.formula.GetBeta()
         res[form]['Alpha']=self.formula.GetAlpha()
         res[form]['Pf']=self.formula.GetPOF()
@@ -192,12 +213,17 @@ class Base():
         """
         辞書型データで与えられる入力条件dfについて、限界速度の計算を行い、結果を出力する
         """
+        
         self.searchFormula(form=df['formula'])
+        self.formula.SaveDf(df)
         self.formula.i_Valid=True
         df2=df.copy()
         print('*** Analysis of Balistic Limit Velocity ***')
+        print('[',self.formula.GetTitle(),']')
         df2['v']['mean']=0
-        print('Vbl=',self.formula.Gcheck(df2))
+        df2['Me']['mean']=1.0
+        mu=self.formula.makeMean(df2)
+        print('Vbl=',self.formula.gcalc(mu))
     def apCalc(self):
         """
         辞書型データself.dfに対して確率論的評価を行い、結果を出力する
@@ -216,10 +242,12 @@ class Base():
         self.Calc(df)
         print('File=',fname)      
 
-       
+import sys
+from io import StringIO       
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+        self.original_stdout = sys.stdout#標準出力の出力先
         self.bb=Base()
         self.master = master
         self.method=[
@@ -235,11 +263,13 @@ class Application(tk.Frame):
             'THOR',
             'WenJones'  
         ]
+        self.dict={}#貫通公式管理クラスに特殊処理があるときに引き渡す辞書データ
         lbl = tk.Label(text='Formula')
         lbl.place(x=20,y=10)
         # チェックボックスON/OFFの状態
 
         self.var_item = tk.IntVar() #formulaの選択項目
+        self.out_item = tk.IntVar() #出力先の選択項目
         self.var_prob=tk.IntVar()
         self.var_draw=tk.IntVar()
         self.xcoord_item=tk.IntVar()
@@ -248,12 +278,13 @@ class Application(tk.Frame):
         for i in range(len(self.method)):
             btn=tk.Radiobutton(self.master,value=i, variable=self.var_item,text=self.method[i],command=self.change_selected_item) 
             btn.place(x=10, y=30 + (i * 24))
-        self.btn_v=tk.Radiobutton(self.master,value=0,variable=self.var_prob,text='Evaluate v_lim',command=self.change_selected_item)
-        self.btn_p=tk.Radiobutton(self.master,value=1,variable=self.var_prob,text='Probabilistic analysis',command=self.change_selected_item)
+        self.btn_v=tk.Radiobutton(self.master,value=0,variable=self.var_prob,text='Evaluate v_lim',command=self.change_anal_item)
+        self.btn_p=tk.Radiobutton(self.master,value=1,variable=self.var_prob,text='Probabilistic analysis',command=self.change_anal_item)
         self.btn_contour=tk.Radiobutton(self.master,value=0,variable=self.var_draw,text='Contour',command=self.change_contour_item)
         self.btn_graph=tk.Radiobutton(self.master,value=1,variable=self.var_draw,text='Graph',command=self.change_contour_item)
         #self.var=['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v','ro_imp','a10','shape','fragment','Material']
-        self.var=['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v','ro_imp','shape','fragment','Material']
+        self.var=['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v','ro_imp','shape','fragment','Material','Me']
+        lbl_out = tk.Label(text='Output')#printの出力先ラジオのラベル
         lbl_b = tk.Label(text='b'); self.lbl_b=tk.Label(text='*')
         lbl_d = tk.Label(text='d'); self.lbl_d=tk.Label(text='*')
         lbl_m = tk.Label(text='m'); self.lbl_m=tk.Label(text='*')
@@ -268,6 +299,7 @@ class Application(tk.Frame):
         lbl_shape=tk.Label(text='Shape');self.lbl_shape=tk.Label(text='*')
         lbl_frag=tk.Label(text='Fragment');self.lbl_frag=tk.Label(text='*')
         lbl_Material=tk.Label(text='Material');self.lbl_Material=tk.Label(text='*')
+        lbl_Me = tk.Label(text='Me');self.lbl_Me=tk.Label(text='*')
         lbl_const=tk.Label(text='Const.')
         lbl_mean=tk.Label(text='Mean')
         lbl_cov=tk.Label(text='COV')
@@ -282,6 +314,7 @@ class Application(tk.Frame):
         self.txt_th_m = tk.Entry(width=en)
         self.txt_Limp_m = tk.Entry(width=en)
         self.txt_v_m = tk.Entry(width=en)
+        self.txt_Me_m= tk.Entry(width=en)
         self.txt_b_c = tk.Entry(width=en)
         self.txt_d_c = tk.Entry(width=en)
         self.txt_m_c = tk.Entry(width=en)
@@ -291,6 +324,7 @@ class Application(tk.Frame):
         self.txt_th_c = tk.Entry(width=en)
         self.txt_Limp_c = tk.Entry(width=en)
         self.txt_v_c = tk.Entry(width=en)
+        self.txt_Me_c = tk.Entry(width=en)
         self.txt_ro_imp=tk.Entry(width=en)
         
         #self.txt_a10=tk.Entry(width=en*2)
@@ -316,6 +350,11 @@ class Application(tk.Frame):
         i=0; xx=150; x_ast=xx-10; yy=30; dy_ast=3; dx0=50; dx=100
         button_exit.place(x=30,y=30 + (len(self.method) * 24)+70)
         #self.txt_Text.place(x=xx+260,y=yy)
+        lbl_out.place(x=xx+dx0*15+10,y=yy-24+24)#printの出力先ラジオのラベル
+        radio1=tk.Radiobutton(self.master,value=0, variable=self.out_item,text='Panel',command=self.change_out_item)
+        radio1.place(x=xx+dx0*15+10,y=yy-24+24+24)
+        radio2=tk.Radiobutton(self.master,value=1, variable=self.out_item,text='stdOutput',command=self.change_out_item)
+        radio2.place(x=xx+dx0*15+10,y=yy-24+24+24+24)
         lbl_const.place(x=xx-30,y=yy-24)
         lbl_mean.place(x=xx+dx0,y=yy-24)
         lbl_cov.place(x=xx+dx0+dx,y=yy-24)
@@ -346,6 +385,9 @@ class Application(tk.Frame):
         yy+=24;lbl_v.place(x=xx,y=yy); self.lbl_v.place(x=x_ast,y=yy+dy_ast);i+=1
         self.txt_v_m.place(x=xx+dx0,y=yy)
         self.txt_v_c.place(x=xx+dx0+dx,y=yy)
+        yy+=24;lbl_Me.place(x=xx,y=yy); self.lbl_Me.place(x=x_ast,y=yy+dy_ast);i+=1
+        self.txt_Me_m.place(x=xx+dx0,y=yy)
+        self.txt_Me_c.place(x=xx+dx0+dx,y=yy)        
         yy+=24;lbl_ro_imp.place(x=xx,y=yy); self.lbl_ro_imp.place(x=x_ast,y=yy+dy_ast);i+=1
         self.txt_ro_imp.place(x=xx+dx0,y=yy)
         #yy+=24;lbl_a10.place(x=xx,y=yy); self.lbl_a10.place(x=x_ast,y=yy+dy_ast);i+=1
@@ -466,13 +508,27 @@ class Application(tk.Frame):
         fname=self.txt_save.get()
         self.bb.write_pickle(fname,df)
     def Load_click(self):
-        fname=self.txt_load.get()
-        df = self.bb.read_pickle(fname)
-        self.bb.setDf(df)
+        #fname=self.txt_load.get()
+        fname=self.select()
+        df = self.bb.read_pickle(fname)#ファイルから辞書型データdfに読み込む
+        self.bb.setDf(df)#辞書型データをself.bbに組み込む
         self.toDict(df)
-        print('File[',fname,']') 
+        self.txt_load.insert(0,fname)
+        print('***reading file[',fname,']') 
+    def select(self):
+    # 選択可能な拡張子を指定
+        filetype = [("Pickle file", ".pkl")]
+        # ファイル選択の初期表示のディレクトリ
+        #path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.abspath(os.path.dirname(__name__))
+        # ファイル選択ダイアログ表示
+        cap_filepath = filedialog.askopenfilename(filetype = filetype, initialdir = path)
+        # Widgetにbindされた変数にファイル名を設定
+        filename = os.path.basename(cap_filepath)
+        #cap_filename.set( filename )
+        return filename       
     def Calc_click(self):
-
+        #self.change_out_item()
         if self.master.title()=='Drawing system':
             self.formula.i_Valid=False
             cdata=self.MakeCdata()
@@ -501,19 +557,30 @@ class Application(tk.Frame):
                 cdata=self.MakeCdata() 
                 df=self.MakeDict()
                 #self.bb.draw_graph(df,cdata)
-        else:              
+        else:
+            # Replace stdout with a StringIO object
+            iOut=self.out_item.get()
+            if iOut==0:
+                sys.stdout = StringIO()              
             df=self.MakeDict()
+            self.df=df
+            print('==========================================')
+            print('Title:',self.txt_title.get())
             if self.iProb==1:
-                self.bb.Calc(df)
+                self.bb.Calc(df) #self.bbはBase()のインスタンス
             else:
-                self.bb.Vbl(df)
-
+                self.bb.Vbl(df)#dfにはmeanしか入っていないことに注意
+            #iOut=self.out_item.get()
+            if iOut==0:
+                self.txt_Text.insert(1.0,sys.stdout.getvalue()) 
     def MakeDict(self):
         df={}
         df=self.dfAdd(df)
         df=self.dfAddC(df)
         df['Title']=self.txt_title.get()
         df['formula']=self.method[self.var_item.get()]
+        if df['formula']=='Jowett':
+            self.dict['Lsh']=df['Lsh']
         return df
     def Clear(self):
         self.txt_title.delete(0,tk.END)
@@ -536,6 +603,9 @@ class Application(tk.Frame):
         self.txt_v_m.delete(0,tk.END)
         self.txt_v_c.delete(0,tk.END)
         self.txt_ro_imp.delete(0,tk.END)
+        self.txt_Me_m.delete(0,tk.END)
+        self.txt_Me_c.delete(0,tk.END)
+        self.txt_load.delete(0,tk.END)
         #self.txt_a10.delete(0,tk.END)
         #self.combo_shape.delete(0,tk.END)
         #self.combo_frag.delete(0,tk.END)
@@ -547,7 +617,7 @@ class Application(tk.Frame):
         self.txt_title.insert(0,df['Title'])
         for i in range(len(self.formula.variable)):
             var=self.formula.variable[i]
-            ii=self.var.index(var)
+            ii=self.var.index(var)#登録されている変数self.varの中の何番目かを示すインデックス
             if ii==0:
                 self.txt_b_m.insert(0,df['b']['mean']) 
                 if self.iProb:
@@ -587,6 +657,10 @@ class Application(tk.Frame):
                         self.txt_v_c.insert(0,df['v']['cov'])
                 else:
                     self.txt_v_m.insert(0,'0')
+            if ii==13:
+                self.txt_Me_m.insert(0,df['Me']['mean'])
+                if self.iProb:
+                    self.txt_Me_c.insert(0,df['Me']['cov'])
         for i in range(len(self.formula.const)):
             const=self.formula.const[i]
             ii=self.var.index(const)
@@ -618,9 +692,12 @@ class Application(tk.Frame):
                 self.combo_frag.set(df['fragment'])
             if ii==12:
                 self.combo_mat.set(df['Material'])
+            if ii==13:
+                self.txt_Me_m.insert(0,df['Me']['mean'])
 
     def dfAdd(self,df):
-        #['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v']
+        #画面の入力データから数値を読み取りdf内に組み込む
+        #['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v','Me']
         for i in range(len(self.formula.variable)):
             var=self.formula.variable[i]
             ii=self.var.index(var)
@@ -678,7 +755,12 @@ class Application(tk.Frame):
                 if self.iProb:
                     df['v']['cov']=float(self.txt_v_c.get())
                     df['v']['dist']='normal'  #正規分布と仮定
-
+            if ii==13:
+                df['Me']={} 
+                df['Me']['mean']=float(self.txt_Me_m.get())
+                if self.iProb:
+                    df['Me']['cov']=float(self.txt_Me_c.get())
+                    df['Me']['dist']='normal'  #正規分布と仮定
         return df
     def dfAddC(self,df):
         #['b', 'd', 'm', 'Su', 'Sy','Lsh', 'th', 'Limp', 'v']
@@ -727,6 +809,9 @@ class Application(tk.Frame):
             if ii==12:
                 df['Material']={}
                 df['Material']=self.combo_mat.get()
+            if ii==13:
+                df['Me']={} 
+                df['Me']['mean']=float(self.txt_Me_m.get())
         return df
     def makeNormal(self):
         self.Clear()
@@ -772,6 +857,9 @@ class Application(tk.Frame):
                 self.combo_frag['state']='normal'
             if ii==12:
                 self.combo_mat['state']='normal'
+            if ii==13:
+                self.txt_Me_m['state']='normal' 
+                if self.iProb==1: self.txt_Me_c['state']='normal'                
                 
             
 
@@ -791,6 +879,7 @@ class Application(tk.Frame):
         self.lbl_shape['text']=''
         self.lbl_frag['text']=''
         self.lbl_Material['text']=''
+        self.lbl_Me['text']=''
         for i in range(len(const)):
             self.setAst(self.var.index(const[i]))       
     def setAst(self,i):
@@ -829,6 +918,8 @@ class Application(tk.Frame):
         self.txt_v_m.insert(0,'0')
         self.txt_v_m['state']='disable'
         self.txt_v_c['state']='disable'
+        self.txt_Me_m['state']='disable'
+        self.txt_Me_c['state']='disable'
         self.txt_ro_imp.insert(0,'10000')
         #self.txt_a10.insert(0,'1750(aluminum),4000(RHA)')
         self.txt_ro_imp['state']='disable'
@@ -840,36 +931,47 @@ class Application(tk.Frame):
         #self.txt_frag['state']='disable'
         self.combo_frag.config(state='disabled')
         self.combo_mat.config(state='disabled')
-                          
+    def change_out_item(self):
+        iOut=self.out_item.get()
+ 
+        if iOut==0:
+            print('*** Output is redirected to Panel')
+            # 標準出力を一時的にリダイレクトする
+            sys.stdout = StringIO() 
+        else:
+            # 元の標準出力に戻す
+            sys.stdout = self.original_stdout
+            print('*** Output is redirected to Standard Output')
+    def change_anal_item(self):
+        self.iProb=self.var_prob.get()
     def change_selected_item(self):
         self.Clear()
         iFormula=self.var_item.get()
-        self.iProb=self.var_prob.get()
         if iFormula==0:
-            self.formula=pen.AlyLi_M()
+            self.formula=pen.AlyLi()
         if iFormula==1:
-            self.formula=pen.BRL_M()
+            self.formula=pen.BRL()
         if iFormula==2:
-            self.formula=pen.DeMarre_M()
+            self.formula=pen.DeMarre()
         if iFormula==3:
-            self.formula=pen.Jowett_M()
+            self.formula=pen.Jowett()
         if iFormula==4:
-            self.formula=pen.Lambert_M()
+            self.formula=pen.Lambert()
         if iFormula==5:
-            self.formula=pen.Neilson_M()
+            self.formula=pen.Neilson()
         if iFormula==6:
-            self.formula=pen.Ohte_M()
+            self.formula=pen.Ohte()
         if iFormula==7:
-            self.formula=pen.SRI_M()
+            self.formula=pen.SRI()
         if iFormula==8:
-            self.formula=pen.SwRI_M()
+            self.formula=pen.SwRI()
         if iFormula==9:
-            self.formula=pen.THOR_M()
+            self.formula=pen.THOR()
         if iFormula==10:
-            self.formula=pen.WenJones_M()
-        self.makeDisable()
-        self.makeNormal()
-        self.makeConst()
+            self.formula=pen.WenJones()
+        self.makeDisable() #入力エディタを全てdisableにする
+        self.makeNormal() #公式のパラメータの入力エディタを全てenableにする
+        self.makeConst()#適用範囲チェック用のパラメータに*をつける
         #self.txt_Text.delete("1.0","end")
         #self.txt_Text.insert(1.0,self.formula.__doc__)
         if self.var_draw.get()==0:
@@ -877,7 +979,7 @@ class Application(tk.Frame):
             self.makeItem()
         else:
             self.combo_item.config(state='disabled')
-        
+        self.txt_Text.insert(1.0,self.formula.__doc__)
         return
     def makeItem(self):
         """
@@ -887,8 +989,13 @@ class Application(tk.Frame):
         vv=['PoF','Beta']
         for v in var:
             vv.append('ar_'+v)
-        self.combo_item['values']=vv
+            self.combo_item['values']=vv
+    def transText(self,text):
+        self.txt_Text=text
 class InterPenet():
+    """
+    確率論的解析のGUIを管理するクラス
+    """
     def __init__(self):
         root = tk.Tk()
         root.geometry('1000x700')
@@ -899,10 +1006,13 @@ class InterPenet():
         app.txt_Text.place(x=150+260,y=30)
         app.btn_v.place(x=150,y=366)
         app.btn_p.place(x=150+100,y=366)
+        app.change_anal_item()
         app.change_selected_item()
         app.txt_Text.delete("1.0","end")
-        app.txt_Text.insert(1.0,app.formula.__doc__)
+        app.txt_Text.insert(1.0,"\n  ---  ©2024 Shinsuke Sakai, Ver 1.3  ---\n\n   1.Choose analysis radio button\n         (-Evaluate V_lim- or -Probabilistic analysis-).\n\n   2.Push [Load]button and select input file(***.pkl).\n\n   3.Push [Calc]button.")
+        app.transText(app.txt_Text)
         app.button_calc.place(x=xx,y=366+48+48)
+        app.change_out_item()
         app.mainloop()
 class Drawing():      
     def __init__(self):
